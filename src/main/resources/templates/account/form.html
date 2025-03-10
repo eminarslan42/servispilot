@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title th:text="${account.id == null ? 'Yeni Hesap' : 'Hesap Düzenle'}">Hesap Formu</title>
+</head>
+<body>
+    <section th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-person-plus me-2"></i>
+                <span th:text="${account.id == null ? 'Yeni Hesap' : 'Hesap Düzenle'}">Hesap Formu</span>
+            </h2>
+            <a th:href="@{/accounts}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Listeye Dön
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/accounts}" method="post" th:object="${account}" class="needs-validation" novalidate>
+                            <input type="hidden" th:field="*{id}">
+                            
+                            <div class="row g-4">
+                                <!-- Temel Bilgiler -->
+                                <div class="col-12">
+                                    <h5 class="card-title d-flex align-items-center mb-4">
+                                        <i class="bi bi-person-circle me-2"></i>Temel Bilgiler
+                                    </h5>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label for="name" class="form-label">
+                                        <i class="bi bi-person me-1"></i>Hesap Adı
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="name" 
+                                           th:field="*{name}" required
+                                           placeholder="Hesap adını girin">
+                                    <div class="invalid-feedback">Lütfen hesap adını girin.</div>
+                                </div>
+
+                                <!-- İletişim Bilgileri -->
+                                <div class="col-12">
+                                    <h5 class="card-title d-flex align-items-center mb-4 mt-2">
+                                        <i class="bi bi-telephone me-2"></i>İletişim Bilgileri
+                                    </h5>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">
+                                        <i class="bi bi-telephone me-1"></i>Telefon
+                                    </label>
+                                    <input type="tel" class="form-control" id="phone" 
+                                           th:field="*{phone}"
+                                           placeholder="Telefon numarası">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>E-posta
+                                    </label>
+                                    <input type="email" class="form-control" id="email" 
+                                           th:field="*{email}"
+                                           placeholder="E-posta adresi">
+                                    <div class="invalid-feedback">Lütfen geçerli bir e-posta adresi girin.</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="address" class="form-label">
+                                        <i class="bi bi-geo-alt me-1"></i>Adres
+                                    </label>
+                                    <textarea class="form-control" id="address" 
+                                              th:field="*{address}" rows="2"
+                                              placeholder="Adres bilgisi"></textarea>
+                                </div>
+
+                                <!-- Vergi Bilgileri -->
+                                <div class="col-12">
+                                    <h5 class="card-title d-flex align-items-center mb-4 mt-2">
+                                        <i class="bi bi-file-text me-2"></i>Vergi Bilgileri
+                                    </h5>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="taxNumber" class="form-label">
+                                        <i class="bi bi-upc me-1"></i>Vergi Numarası
+                                    </label>
+                                    <input type="text" class="form-control" id="taxNumber" 
+                                           th:field="*{taxNumber}"
+                                           placeholder="Vergi numarası">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="taxOffice" class="form-label">
+                                        <i class="bi bi-building me-1"></i>Vergi Dairesi
+                                    </label>
+                                    <input type="text" class="form-control" id="taxOffice" 
+                                           th:field="*{taxOffice}"
+                                           placeholder="Vergi dairesi">
+                                </div>
+
+                                <div class="col-12">
+                                    <hr>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a th:href="@{/accounts}" class="btn btn-secondary">
+                                            <i class="bi bi-x-circle me-1"></i>İptal
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle me-1"></i>Kaydet
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center mb-4">
+                            <i class="bi bi-info-circle me-2"></i>Bilgilendirme
+                        </h5>
+                        <div class="alert alert-info">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <strong>İpucu:</strong>
+                            <ul class="mb-0 ps-3 mt-2">
+                                <li>Hesap adı zorunlu alandır.</li>
+                                <li>Telefon ve e-posta iletişim için önemlidir.</li>
+                                <li>Vergi bilgileri fatura işlemleri için gereklidir.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script th:inline="javascript">
+        // Form doğrulama
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+</body>
+</html> 

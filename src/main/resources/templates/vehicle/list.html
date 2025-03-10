@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Araç Listesi</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+    <section th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-car-front me-2"></i>Araç Listesi
+            </h2>
+            <a href="/vehicles/new" class="btn btn-success">
+                <i class="bi bi-plus-circle me-2"></i>Yeni Araç Ekle
+            </a>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Plaka</th>
+                                        <th>Araç Bilgisi</th>
+                                        <th>Araç Sahibi</th>
+                                        <th>İletişim</th>
+                                        <th>Son Servis</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="vehicle : ${vehicles}" class="align-middle animate__animated animate__fadeIn">
+                                        <td>
+                                            <span class="badge bg-primary" th:text="${vehicle.plate}">34ABC123</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-car-front-fill me-2 text-primary"></i>
+                                                <div>
+                                                    <div class="fw-bold" th:text="${vehicle.brand + ' ' + vehicle.model}">Toyota Corolla</div>
+                                                    <small class="text-muted" th:text="${vehicle.year}">2020</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person-circle me-2 text-secondary"></i>
+                                                <span th:text="${vehicle.ownerName}">Ahmet Yılmaz</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-telephone-fill me-2 text-success"></i>
+                                                <span th:text="${vehicle.ownerPhone}">0555-555-5555</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div th:if="${not #lists.isEmpty(vehicle.serviceRecords)}" 
+                                                 th:with="lastService=${vehicle.serviceRecords[0]}">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-wrench me-2 text-warning"></i>
+                                                    <div>
+                                                        <div th:text="${#temporals.format(lastService.serviceDate, 'dd/MM/yyyy')}">01/01/2024</div>
+                                                        <small class="text-muted" th:text="${lastService.description}">Yağ Değişimi</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span th:if="${#lists.isEmpty(vehicle.serviceRecords)}" class="text-muted">
+                                                <i class="bi bi-dash-circle me-1"></i>Servis kaydı yok
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a th:href="@{/vehicles/{id}(id=${vehicle.id})}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Detaylı Görüntüle">
+                                                    <i class="bi bi-eye me-1"></i>
+                                                </a>
+                                                <a th:href="@{/diagnoses/new(vehicleId=${vehicle.id})}" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Arıza Teşhisi Ekle">
+                                                    <i class="bi bi-tools"></i>
+                                                </a>
+                                                <a th:href="@{/reminders/new(vehicleId=${vehicle.id})}" class="btn btn-sm" style="background-color: #fd7e14; color: white;" data-bs-toggle="tooltip" title="Hatırlatıcı Ekle">
+                                                    <i class="bi bi-bell"></i>
+                                                </a>
+                                                
+                                                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#deleteModal' + ${vehicle.id}"
+                                                        title="Aracı Sil">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(vehicles)}">
+                                        <td colspan="6" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="bi bi-inbox-fill display-1"></i>
+                                                <p class="mt-3">Kayıtlı araç bulunamadı.</p>
+                                                <a href="/vehicles/new" class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-plus-circle me-1"></i>Yeni Araç Ekle
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Service Modals -->
+        <div th:each="vehicle : ${vehicles}" th:id="'quickServiceModal' + ${vehicle.id}" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-wrench me-2"></i>
+                            Hızlı Servis Kaydı - <span th:text="${vehicle.plate}"></span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/service-records}" method="post">
+                        <input type="hidden" name="vehicleId" th:value="${vehicle.id}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">İşlem Açıklaması*</label>
+                                <textarea class="form-control" name="description" rows="2" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Teknisyen*</label>
+                                    <input type="text" class="form-control" name="technician" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Maliyet (TL)*</label>
+                                    <input type="number" class="form-control" name="cost" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-primary">Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modals -->
+        <div th:each="vehicle : ${vehicles}" th:id="'deleteModal' + ${vehicle.id}" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Araç Silme
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            <strong th:text="${vehicle.plate}"></strong> plakalı aracı silmek istediğinizden emin misiniz?
+                        </p>
+                        <p class="text-muted small">Bu işlem geri alınamaz.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                        <form th:action="@{/vehicles/{id}/delete(id=${vehicle.id})}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Sil
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // URL'den hata mesajını kontrol et ve göster
+            window.onload = function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                if (error) {
+                    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                    document.getElementById('errorMessage').textContent = decodeURIComponent(error);
+                    errorModal.show();
+                }
+
+                // Initialize all tooltips
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                });
+            }
+        </script>
+
+        <!-- Hata Modal'ı -->
+        <div class="modal fade" id="errorModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">
+                            <i class="bi bi-exclamation-circle me-2"></i>Hata
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="errorMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tamam</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

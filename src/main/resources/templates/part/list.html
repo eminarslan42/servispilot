@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Parça Stok Yönetimi</title>
+</head>
+<body>
+    <section th:fragment="content">
+        <!-- Üst Bilgi ve Filtreler -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-0">
+                    <i class="bi bi-tools me-2"></i>Parça Stok Yönetimi
+                </h2>
+                <div class="text-muted mt-1" th:if="${searchQuery}">
+                    "<span th:text="${searchQuery}"></span>" için arama sonuçları
+                </div>
+                <div class="text-muted mt-1" th:if="${currentCategory}">
+                    "<span th:text="${currentCategory}"></span>" kategorisindeki parçalar
+                </div>
+                <div class="text-muted mt-1" th:if="${currentSupplier}">
+                    "<span th:text="${currentSupplier}"></span>" tedarikçisinin parçaları
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <form class="d-flex" action="/parts/search" method="get">
+                    <input type="search" class="form-control me-2" name="query" 
+                           placeholder="Parça ara..." required>
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                <a href="/parts/new" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-2"></i>Yeni Parça
+                </a>
+            </div>
+        </div>
+
+        <!-- Düşük Stok Uyarıları -->
+        <div class="alert alert-warning mb-4" th:if="${not #lists.isEmpty(lowStockParts)}">
+            <h5 class="alert-heading">
+                <i class="bi bi-exclamation-triangle me-2"></i>Düşük Stok Uyarısı
+            </h5>
+            <p class="mb-0">Aşağıdaki parçaların stok seviyesi minimum limitin altında:</p>
+            <ul class="list-unstyled mb-0 mt-2">
+                <li th:each="part : ${lowStockParts}" class="mb-1">
+                    <a th:href="@{/parts/{id}(id=${part.id})}" class="alert-link">
+                        <span th:text="${part.name}">Motor Yağı</span>
+                        <small class="text-muted">
+                            (Stok: <span th:text="${part.quantity}">2</span>
+                            / Min: <span th:text="${part.minimumQuantity}">5</span>)
+                        </small>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Parça Listesi -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Kod/Parça</th>
+                                        <th>Kategori</th>
+                                        <th>Stok</th>
+                                        <th>Fiyat</th>
+                                        <th>Tedarikçi</th>
+                                        <th>Son Güncelleme</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="part : ${parts}" class="align-middle animate__animated animate__fadeIn">
+                                        <td>
+                                            <div class="fw-bold" th:text="${part.code}">P001</div>
+                                            <div th:text="${part.name}">Motor Yağı</div>
+                                            <small class="text-muted" th:if="${part.brand != null || part.model != null}">
+                                                <span th:text="${part.brand}">Castrol</span>
+                                                <span th:if="${part.model != null}" th:text="${' - ' + part.model}">Edge</span>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{/parts/category/{category}(category=${part.category})}" 
+                                               class="badge bg-info text-decoration-none">
+                                                <span th:text="${part.category}">Yağlar</span>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div th:class="${'fw-bold ' + (part.quantity <= part.minimumQuantity ? 'text-danger' : 'text-success')}">
+                                                <span th:text="${part.quantity}">10</span>
+                                                <small th:text="${part.unit}">Litre</small>
+                                            </div>
+                                            <small class="text-muted">
+                                                Min: <span th:text="${part.minimumQuantity}">5</span>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="text-success">
+                                                <i class="bi bi-tag-fill me-1"></i>
+                                                <span th:text="${part.sellingPrice + ' TL'}">150 TL</span>
+                                            </div>
+                                            <small class="text-muted">
+                                                Alış: <span th:text="${part.purchasePrice + ' TL'}">120 TL</span>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{/parts/supplier/{supplier}(supplier=${part.supplier})}" 
+                                               class="text-decoration-none">
+                                                <i class="bi bi-building me-1"></i>
+                                                <span th:text="${part.supplier}">ABC Ltd.</span>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div th:text="${#temporals.format(part.lastStockUpdate, 'dd/MM/yyyy')}">
+                                                01/03/2024
+                                            </div>
+                                            <small class="text-muted" 
+                                                   th:text="${#temporals.format(part.lastStockUpdate, 'HH:mm')}">
+                                                14:30
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       th:checked="${part.isActive}"
+                                                       onchange="togglePart(this, [[${part.id}]])">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a th:href="@{/parts/{id}(id=${part.id})}" 
+                                                   class="btn btn-outline-primary btn-sm"
+                                                   title="Detay">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a th:href="@{/parts/{id}/edit(id=${part.id})}" 
+                                                   class="btn btn-outline-primary btn-sm"
+                                                   title="Düzenle">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form th:action="@{/parts/{id}/delete(id=${part.id})}" 
+                                                      method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                            onclick="return confirmDelete(event, 'Bu parçayı silmek istediğinizden emin misiniz?')"
+                                                            title="Sil">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(parts)}">
+                                        <td colspan="8" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="bi bi-inbox display-1"></i>
+                                                <p class="mt-3">Parça bulunamadı.</p>
+                                                <a href="/parts/new" class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-plus-circle me-1"></i>Yeni Parça Ekle
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function togglePart(checkbox, id) {
+                fetch(`/parts/${id}/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        showToast('Parça durumu güncellendi', 'success');
+                    } else {
+                        checkbox.checked = !checkbox.checked;
+                        showToast('Bir hata oluştu', 'error');
+                    }
+                }).catch(error => {
+                    checkbox.checked = !checkbox.checked;
+                    showToast('Bir hata oluştu', 'error');
+                });
+            }
+        </script>
+    </section>
+</body>
+</html> 

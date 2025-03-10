@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Abonelik Yönetimi</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+    <section>
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0 text-gray-800">Abonelik Yönetimi</h1>
+                <div>
+                    <span class="badge bg-info me-2">
+                        Toplam: <span th:text="${#lists.size(subscriptions)}">0</span>
+                    </span>
+                    <span class="badge bg-success me-2">
+                        Aktif: <span th:text="${#lists.size(subscriptions.?[isActive == true])}">0</span>
+                    </span>
+                    <span class="badge bg-danger">
+                        Pasif: <span th:text="${#lists.size(subscriptions.?[isActive == false])}">0</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" id="subscriptionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Kullanıcı Adı</th>
+                                    <th>E-posta</th>
+                                    <th>Başlangıç Tarihi</th>
+                                    <th>Bitiş Tarihi</th>
+                                    <th>Son Ödeme Tarihi</th>
+                                    <th>Durum</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="subscription : ${subscriptions}">
+                                    <td>
+                                        <span th:text="${subscription.user.username}"></span>
+                                        <small class="text-muted d-block" th:text="${'ID: ' + subscription.user.id}"></small>
+                                    </td>
+                                    <td th:text="${subscription.user.email}"></td>
+                                    <td th:text="${#temporals.format(subscription.startDate, 'dd/MM/yyyy')}"></td>
+                                    <td th:text="${#temporals.format(subscription.endDate, 'dd/MM/yyyy')}"></td>
+                                    <td th:text="${#temporals.format(subscription.lastPaymentDate, 'dd/MM/yyyy')}"></td>
+                                    <td>
+                                        <span th:if="${subscription.isActive}" 
+                                              class="badge bg-success">Aktif</span>
+                                        <span th:unless="${subscription.isActive}" 
+                                              class="badge bg-danger">Pasif</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <form th:if="${subscription.isActive}" 
+                                                  th:action="@{/api/subscriptions/{id}/extend(id=${subscription.user.id})}" 
+                                                  method="post" 
+                                                  style="display: inline;">
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-primary"
+                                                        onclick="return confirm('Bu kullanıcının aboneliğini uzatmak istediğinizden emin misiniz?')">
+                                                    <i class="bi bi-arrow-clockwise"></i> Uzat
+                                                </button>
+                                            </form>
+                                            
+                                            <form th:if="${subscription.isActive}" 
+                                                  th:action="@{/api/subscriptions/{id}/cancel(id=${subscription.user.id})}" 
+                                                  method="post" 
+                                                  style="display: inline;">
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Bu kullanıcının aboneliğini iptal etmek istediğinizden emin misiniz?')">
+                                                    <i class="bi bi-x-circle"></i> İptal Et
+                                                </button>
+                                            </form>
+                                            
+                                            <form th:unless="${subscription.isActive}" 
+                                                  th:action="@{/api/subscriptions/{id}/renew(id=${subscription.user.id})}" 
+                                                  method="post" 
+                                                  style="display: inline;">
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-success"
+                                                        onclick="return confirm('Bu kullanıcının aboneliğini yenilemek istediğinizden emin misiniz?')">
+                                                    <i class="bi bi-arrow-repeat"></i> Yenile
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                $('#subscriptionsTable').DataTable({
+                    language: {
+                        url: '/js/datatables-tr.json'
+                    },
+                    order: [[2, 'desc']]
+                });
+            });
+        </script>
+    </section>
+</body>
+</html> 

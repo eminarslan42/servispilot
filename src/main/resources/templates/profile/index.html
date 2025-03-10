@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Profil - Car Service</title>
+</head>
+<body>
+    <section>
+        <div class="profile-container">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h1 class="profile-name" th:text="${user.firstName + ' ' + user.lastName}">Ad Soyad</h1>
+                <p class="profile-username" th:text="${user.username}">kullanıcı_adı</p>
+            </div>
+            
+            <div class="profile-content">
+                <!-- Abonelik Durumu -->
+                <div th:if="${isSubscriptionValid}" class="subscription-status subscription-active">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Abonelik Durumu:</strong> Aktif
+                </div>
+                <div th:unless="${isSubscriptionValid}" class="subscription-status subscription-inactive">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Abonelik Durumu:</strong> Pasif - Lütfen servispilot@hotmail.com ile iletişime geçiniz.
+                </div>
+                
+                <!-- Başarı Mesajı -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${successMessage}">Profil bilgileriniz başarıyla güncellendi.</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <!-- Şifre Değiştirme Başarı Mesajı -->
+                <div th:if="${passwordSuccess}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${passwordSuccess}">Şifreniz başarıyla güncellendi.</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <!-- Şifre Değiştirme Hata Mesajı -->
+                <div th:if="${passwordError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span th:text="${passwordError}">Şifre değiştirme işlemi başarısız.</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <!-- Sekmeler -->
+                <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">
+                            <i class="bi bi-person me-2"></i>Profil Bilgileri
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">
+                            <i class="bi bi-lock me-2"></i>Şifre Değiştir
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Sekme İçerikleri -->
+                <div class="tab-content" id="profileTabsContent">
+                    <!-- Profil Bilgileri Sekmesi -->
+                    <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <form th:action="@{/profile/update}" method="post" th:object="${user}">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="username" class="form-label">Kullanıcı Adı</label>
+                                    <input type="text" class="form-control" id="username" th:field="*{username}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">E-posta</label>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="firstName" class="form-label">Ad</label>
+                                    <input type="text" class="form-control" id="firstName" th:field="*{firstName}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="lastName" class="form-label">Soyad</label>
+                                    <input type="text" class="form-control" id="lastName" th:field="*{lastName}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Telefon</label>
+                                <input type="text" class="form-control" id="phone" th:field="*{phone}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Değişiklikleri Kaydet
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Şifre Değiştir Sekmesi -->
+                    <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+                        <form th:action="@{/profile/change-password}" method="post">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Mevcut Şifre</label>
+                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">Yeni Şifre</label>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Yeni Şifre (Tekrar)</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-key me-2"></i>Şifreyi Değiştir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            .profile-container {
+                max-width: 1000px;
+                margin: 30px auto;
+                background-color: #fff;
+                border-radius: 15px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            .profile-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background-color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                font-size: 50px;
+                color: #764ba2;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+            .profile-name {
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 5px;
+            }
+            .profile-username {
+                font-size: 16px;
+                opacity: 0.9;
+            }
+            .profile-content {
+                padding: 30px;
+            }
+            .nav-tabs {
+                border-bottom: 2px solid #e9ecef;
+            }
+            .nav-tabs .nav-link {
+                border: none;
+                color: #495057;
+                font-weight: 500;
+                padding: 12px 20px;
+                margin-right: 5px;
+                transition: all 0.3s ease;
+            }
+            .nav-tabs .nav-link:hover {
+                color: #667eea;
+            }
+            .nav-tabs .nav-link.active {
+                color: #667eea;
+                background-color: transparent;
+                border-bottom: 3px solid #667eea;
+            }
+            .tab-content {
+                padding: 30px 0;
+            }
+            .subscription-status {
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+            .subscription-active {
+                background-color: rgba(40, 167, 69, 0.1);
+                border: 1px solid #28a745;
+                color: #28a745;
+            }
+            .subscription-inactive {
+                background-color: rgba(220, 53, 69, 0.1);
+                border: 1px solid #dc3545;
+                color: #dc3545;
+            }
+        </style>
+    </section>
+</body>
+</html> 

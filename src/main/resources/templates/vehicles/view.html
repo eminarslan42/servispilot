@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Araç Detayları</title>
+</head>
+<body>
+    <section>
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-car-front me-2"></i>Araç Detayları
+                </h2>
+                <div>
+                    <a th:href="@{/vehicles}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Araçlara Dön
+                    </a>
+                    <a th:href="@{/vehicles/{id}/edit(id=${vehicle.id})}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i>Düzenle
+                    </a>
+                </div>
+            </div>
+
+            <!-- Araç Bilgileri -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h5 class="card-title">
+                                <i class="bi bi-info-circle me-2"></i>Temel Bilgiler
+                            </h5>
+                            <p><strong>Plaka:</strong> <span class="badge bg-primary" th:text="${vehicle.plate}"></span></p>
+                            <p><strong>Marka:</strong> <span th:text="${vehicle.brand}"></span></p>
+                            <p><strong>Model:</strong> <span th:text="${vehicle.model}"></span></p>
+                            <p><strong>Yıl:</strong> <span th:text="${vehicle.year}"></span></p>
+                        </div>
+                        <div class="col-md-3">
+                            <h5 class="card-title">
+                                <i class="bi bi-person me-2"></i>Sahibi
+                            </h5>
+                            <p><strong>Ad Soyad:</strong> <span th:text="${vehicle.ownerName}"></span></p>
+                            <p><strong>Telefon:</strong> <span th:text="${vehicle.ownerPhone}"></span></p>
+                        </div>
+                        <div class="col-md-3">
+                            <h5 class="card-title">
+                                <i class="bi bi-speedometer2 me-2"></i>Kilometre Bilgisi
+                            </h5>
+                            <p><strong>Güncel Kilometre:</strong> <span th:text="${vehicle.currentKilometer + ' km'}"></span></p>
+                        </div>
+                        <div class="col-md-3">
+                            <h5 class="card-title">
+                                <i class="bi bi-calendar me-2"></i>Kayıt Bilgisi
+                            </h5>
+                            <p><strong>Kayıt Tarihi:</strong> <span th:text="${#temporals.format(vehicle.createdAt, 'dd/MM/yyyy')}"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sekmeler -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#service" data-bs-toggle="tab">
+                        <i class="bi bi-tools me-1"></i>Servis Kayıtları
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/maintenance/vehicle/{id}(id=${vehicle.id})}">
+                        <i class="bi bi-wrench me-1"></i>Bakım Geçmişi
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#inspections" data-bs-toggle="tab">
+                        <i class="bi bi-clipboard-check me-1"></i>Ekspertiz Raporları
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#reminders" data-bs-toggle="tab">
+                        <i class="bi bi-bell me-1"></i>Hatırlatıcılar
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Sekme İçerikleri -->
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="service">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="card-title mb-0">Servis Kayıtları</h5>
+                                <a th:href="@{/services/new(vehicleId=${vehicle.id})}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i>Yeni Servis Kaydı
+                                </a>
+                            </div>
+                            <div th:if="${#lists.isEmpty(vehicle.serviceRecords)}" class="text-center py-5">
+                                <i class="bi bi-tools display-1 text-muted"></i>
+                                <p class="mt-3">Henüz servis kaydı bulunmuyor.</p>
+                            </div>
+                            <div th:unless="${#lists.isEmpty(vehicle.serviceRecords)}" class="table-responsive">
+                                <!-- Servis kayıtları tablosu -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="inspections">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="card-title mb-0">Ekspertiz Raporları</h5>
+                                <a th:href="@{/inspections/new(vehicleId=${vehicle.id})}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i>Yeni Ekspertiz
+                                </a>
+                            </div>
+                            <!-- Ekspertiz raporları içeriği -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="reminders">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="card-title mb-0">Servis Hatırlatıcıları</h5>
+                                <a th:href="@{/reminders/new(vehicleId=${vehicle.id})}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i>Yeni Hatırlatıcı
+                                </a>
+                            </div>
+                            <!-- Hatırlatıcılar içeriği -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

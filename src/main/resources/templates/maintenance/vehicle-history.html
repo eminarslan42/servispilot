@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Araç Bakım Geçmişi</title>
+</head>
+<body>
+    <section>
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-wrench me-2"></i>Araç Bakım Geçmişi
+                </h2>
+                <div>
+                    <a th:href="@{/vehicles/{id}(id=${vehicle.id})}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Araca Dön
+                    </a>
+                    <a th:href="@{/maintenance/new(vehicleId=${vehicle.id})}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Yeni Bakım Kaydı
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Araç Bilgileri -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-car-front me-2"></i>Araç Bilgileri
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <p class="mb-1">
+                                <span class="text-muted">Plaka:</span>
+                                <span class="badge bg-primary" th:text="${vehicle.plate}"></span>
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1">
+                                <span class="text-muted">Marka/Model:</span>
+                                <span th:text="${vehicle.brand + ' ' + vehicle.model}"></span>
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1">
+                                <span class="text-muted">Kilometre:</span>
+                                <span th:text="${vehicle.currentKilometer + ' km'}"></span>
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <div th:if="${needsMaintenance}" class="alert alert-warning mb-0 py-2">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Bakım Zamanı Geldi!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bakım Geçmişi -->
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#allHistory">
+                                <i class="bi bi-clock-history me-1"></i>Tüm Geçmiş
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#warranty">
+                                <i class="bi bi-shield-check me-1"></i>Garanti Kapsamındakiler
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Tüm Bakım Geçmişi -->
+                        <div class="tab-pane fade show active" id="allHistory">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Bakım Tipi</th>
+                                            <th>Kilometre</th>
+                                            <th>Teknisyen</th>
+                                            <th>Maliyet</th>
+                                            <th>Sonraki Bakım</th>
+                                            <th>İşlemler</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="maintenance : ${maintenanceHistory}">
+                                            <td>
+                                                <span th:text="${#temporals.format(maintenance.createdAt, 'dd/MM/yyyy')}"></span>
+                                                <small class="text-muted" th:text="${#temporals.format(maintenance.createdAt, 'HH:mm')}"></small>
+                                            </td>
+                                            <td>
+                                                <span th:text="${maintenance.maintenanceType}"></span>
+                                            </td>
+                                            <td th:text="${maintenance.kilometerage + ' km'}"></td>
+                                            <td th:text="${maintenance.technician}"></td>
+                                            <td>
+                                                <span th:text="${#numbers.formatDecimal(maintenance.cost, 1, 'DEFAULT', 2, 'DEFAULT')}"></span> TL
+                                            </td>
+                                            <td>
+                                                <div th:if="${maintenance.nextMaintenanceKm != null}">
+                                                    <span th:text="${maintenance.nextMaintenanceKm + ' km'}"></span>
+                                                    <small class="text-muted" th:if="${maintenance.nextMaintenanceDate != null}"
+                                                           th:text="${'veya ' + #temporals.format(maintenance.nextMaintenanceDate, 'dd/MM/yyyy')}">
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a th:href="@{/maintenance/{id}(id=${maintenance.id})}" 
+                                                       class="btn btn-sm btn-info" 
+                                                       title="Görüntüle">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    <a th:href="@{/maintenance/{id}/edit(id=${maintenance.id})}" 
+                                                       class="btn btn-sm btn-primary"
+                                                       title="Düzenle">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <form th:action="@{/maintenance/{id}/delete(id=${maintenance.id})}" 
+                                                          method="post" 
+                                                          style="display: inline;"
+                                                          onsubmit="return confirm('Bu bakım kaydını silmek istediğinizden emin misiniz?');">
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Sil">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(maintenanceHistory)}">
+                                            <td colspan="7" class="text-center py-5">
+                                                <div class="text-muted">
+                                                    <i class="bi bi-wrench display-1"></i>
+                                                    <p class="mt-3">Henüz bakım kaydı bulunmuyor.</p>
+                                                    <a th:href="@{/maintenance/new(vehicleId=${vehicle.id})}" class="btn btn-primary btn-sm">
+                                                        <i class="bi bi-plus-circle me-1"></i>Yeni Bakım Kaydı Ekle
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Garanti Kapsamındaki İşlemler -->
+                        <div class="tab-pane fade" id="warranty">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Bakım Tipi</th>
+                                            <th>Garanti Bitiş</th>
+                                            <th>Açıklama</th>
+                                            <th>İşlemler</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="maintenance : ${warrantyServices}">
+                                            <td>
+                                                <span th:text="${#temporals.format(maintenance.createdAt, 'dd/MM/yyyy')}"></span>
+                                            </td>
+                                            <td th:text="${maintenance.maintenanceType}"></td>
+                                            <td th:text="${#temporals.format(maintenance.warrantyEndDate, 'dd/MM/yyyy')}"></td>
+                                            <td th:text="${maintenance.description}"></td>
+                                            <td>
+                                                <a th:href="@{/maintenance/{id}(id=${maintenance.id})}" 
+                                                   class="btn btn-sm btn-info">
+                                                    <i class="bi bi-eye me-1"></i>Detay
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(warrantyServices)}">
+                                            <td colspan="5" class="text-center py-5">
+                                                <div class="text-muted">
+                                                    <i class="bi bi-shield-x display-1"></i>
+                                                    <p class="mt-3">Garanti kapsamında işlem bulunmuyor.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bakım Raporu -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Bakım Raporu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/maintenance/report}" method="get" class="row g-3">
+                        <input type="hidden" name="vehicleId" th:value="${vehicle.id}">
+                        <div class="col-md-4">
+                            <label class="form-label">Başlangıç Tarihi</label>
+                            <input type="date" class="form-control" name="startDate" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Bitiş Tarihi</label>
+                            <input type="date" class="form-control" name="endDate" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary d-block">
+                                <i class="bi bi-search me-1"></i>Rapor Oluştur
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

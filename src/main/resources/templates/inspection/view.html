@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Ekspertiz Detayı</title>
+</head>
+<body>
+    <section>
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-clipboard-check me-2"></i>Ekspertiz Detayı
+                </h2>
+                <div>
+                    <a th:href="@{/vehicles/{id}(id=${inspection.vehicle.id})}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Araca Dön
+                    </a>
+                    <a th:href="@{/inspections/{id}/edit(id=${inspection.id})}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i>Düzenle
+                    </a>
+                    <a th:href="@{/inspections/{id}/pdf(id=${inspection.id})}" class="btn btn-danger" target="_blank">
+                        <i class="bi bi-file-pdf me-1"></i>PDF İndir
+                    </a>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-car-front me-2"></i>Araç Bilgileri
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>
+                                        <span class="text-muted">Plaka:</span>
+                                        <span class="badge bg-primary" th:text="${inspection.vehicle.plate}"></span>
+                                    </p>
+                                    <p>
+                                        <span class="text-muted">Marka/Model:</span>
+                                        <span th:text="${inspection.vehicle.brand + ' ' + inspection.vehicle.model}"></span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>
+                                        <span class="text-muted">Kilometre:</span>
+                                        <span th:text="${inspection.currentKilometer + ' km'}"></span>
+                                    </p>
+                                    <p>
+                                        <span class="text-muted">Yakıt Durumu:</span>
+                                        <span th:text="${inspection.fuelLevel}"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clipboard-data me-2"></i>Kontrol Bilgileri
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>
+                                        <span class="text-muted">Kontrol Tipi:</span>
+                                        <span th:class="${'badge ' + 
+                                            (inspection.inspectionType == 'GIRIS' ? 'bg-success' : 
+                                             inspection.inspectionType == 'CIKIS' ? 'bg-danger' : 'bg-info')}"
+                                              th:text="${inspection.inspectionType}">
+                                        </span>
+                                    </p>
+                                    <p>
+                                        <span class="text-muted">Kontrol Eden:</span>
+                                        <span th:text="${inspection.inspector}"></span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>
+                                        <span class="text-muted">Tarih:</span>
+                                        <div>
+                                            <span th:text="${#temporals.format(inspection.createdAt, 'dd/MM/yyyy')}"></span>
+                                            <small class="text-muted" th:text="${#temporals.format(inspection.createdAt, 'HH:mm')}"></small>
+                                        </div>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-tools me-2"></i>Araç Ekipmanları
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>
+                                        <i th:class="${inspection.hasSpareWheel ? 'bi bi-check-circle-fill text-success' : 'bi bi-x-circle-fill text-danger'}"></i>
+                                        <span class="ms-2">Stepne</span>
+                                    </p>
+                                    <p>
+                                        <i th:class="${inspection.hasJack ? 'bi bi-check-circle-fill text-success' : 'bi bi-x-circle-fill text-danger'}"></i>
+                                        <span class="ms-2">Kriko</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>
+                                        <i th:class="${inspection.hasFirstAidKit ? 'bi bi-check-circle-fill text-success' : 'bi bi-x-circle-fill text-danger'}"></i>
+                                        <span class="ms-2">İlk Yardım Çantası</span>
+                                    </p>
+                                    <p>
+                                        <i th:class="${inspection.hasWarningTriangle ? 'bi bi-check-circle-fill text-success' : 'bi bi-x-circle-fill text-danger'}"></i>
+                                        <span class="ms-2">Reflektör</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-star me-2"></i>Durum Değerlendirmesi
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p class="text-muted mb-2">Dış Görünüm</p>
+                                    <div class="condition-rating">
+                                        <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                            <i class="bi" th:classappend="${i <= inspection.exteriorCondition ? 'bi-star-fill text-warning' : 'bi-star'}"></i>
+                                        </th:block>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="text-muted mb-2">İç Görünüm</p>
+                                    <div class="condition-rating">
+                                        <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                            <i class="bi" th:classappend="${i <= inspection.interiorCondition ? 'bi-star-fill text-warning' : 'bi-star'}"></i>
+                                        </th:block>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="text-muted mb-2">Mekanik Durum</p>
+                                    <div class="condition-rating">
+                                        <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                            <i class="bi" th:classappend="${i <= inspection.mechanicalCondition ? 'bi-star-fill text-warning' : 'bi-star'}"></i>
+                                        </th:block>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Hasar/Çizik Durumu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="car-diagram" id="carDiagram"></div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil me-2"></i>Notlar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p th:text="${inspection.notes}" class="mb-0"></p>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .car-diagram {
+                position: relative;
+                width: 800px;
+                height: 600px;
+                margin: 0 auto;
+                background-image: url('/images/car-diagram.png');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                border: 1px solid #dee2e6;
+                border-radius: 0.25rem;
+            }
+            .damage-point {
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                pointer-events: none;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+            }
+            .damage-point[data-severity="HAFIF"] {
+                opacity: 0.6;
+                width: 16px;
+                height: 16px;
+            }
+            .damage-point[data-severity="ORTA"] {
+                opacity: 0.8;
+                width: 20px;
+                height: 20px;
+            }
+            .damage-point[data-severity="AGIR"] {
+                opacity: 1;
+                width: 24px;
+                height: 24px;
+            }
+            .damage-point[data-type="HASAR"] {
+                background-color: #dc3545;
+            }
+            .damage-point[data-type="CIZIK"] {
+                background-color: #ffc107;
+            }
+            .damage-point[data-type="BOYA"] {
+                background-color: #0dcaf0;
+            }
+            .damage-legend {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .damage-legend-item {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .damage-legend-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+            }
+            .damage-notes {
+                margin-top: 1rem;
+                padding: 1rem;
+                background-color: #f8f9fa;
+                border-radius: 0.25rem;
+            }
+            .damage-note-item {
+                margin-bottom: 0.5rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid #dee2e6;
+            }
+            .damage-note-item:last-child {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
+            }
+            .condition-rating {
+                font-size: 24px;
+            }
+            .condition-rating i {
+                margin-right: 2px;
+            }
+        </style>
+
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script th:inline="javascript">
+            $(document).ready(function() {
+                // Hasar verilerini al
+                const damageData = /*[[${inspection.damageData}]]*/ '[]';
+                if (damageData) {
+                    try {
+                        const damagePoints = JSON.parse(damageData);
+                        
+                        // Her hasar noktası için element oluştur
+                        damagePoints.forEach(point => {
+                            const element = $('<div>')
+                                .addClass('damage-point')
+                                .attr('data-type', point.type)
+                                .attr('data-severity', point.severity)
+                                .css({
+                                    left: point.x + '%',
+                                    top: point.y + '%'
+                                });
+                            
+                            $('#carDiagram').append(element);
+                        });
+
+                        // Hasar tiplerini ve şiddetlerini say
+                        const counts = {
+                            HASAR: {
+                                HAFIF: damagePoints.filter(p => p.type === 'HASAR' && p.severity === 'HAFIF').length,
+                                ORTA: damagePoints.filter(p => p.type === 'HASAR' && p.severity === 'ORTA').length,
+                                AGIR: damagePoints.filter(p => p.type === 'HASAR' && p.severity === 'AGIR').length
+                            },
+                            CIZIK: {
+                                HAFIF: damagePoints.filter(p => p.type === 'CIZIK' && p.severity === 'HAFIF').length,
+                                ORTA: damagePoints.filter(p => p.type === 'CIZIK' && p.severity === 'ORTA').length,
+                                AGIR: damagePoints.filter(p => p.type === 'CIZIK' && p.severity === 'AGIR').length
+                            },
+                            BOYA: {
+                                HAFIF: damagePoints.filter(p => p.type === 'BOYA' && p.severity === 'HAFIF').length,
+                                ORTA: damagePoints.filter(p => p.type === 'BOYA' && p.severity === 'ORTA').length,
+                                AGIR: damagePoints.filter(p => p.type === 'BOYA' && p.severity === 'AGIR').length
+                            }
+                        };
+
+                        // Hasar açıklamaları
+                        const legend = $('<div>').addClass('damage-legend');
+                        const types = {
+                            HASAR: { text: 'Hasar', color: '#dc3545' },
+                            CIZIK: { text: 'Çizik', color: '#ffc107' },
+                            BOYA: { text: 'Boya', color: '#0dcaf0' }
+                        };
+                        
+                        Object.entries(types).forEach(([type, info]) => {
+                            const total = counts[type].HAFIF + counts[type].ORTA + counts[type].AGIR;
+                            if (total > 0) {
+                                const details = [];
+                                if (counts[type].HAFIF > 0) details.push(`Hafif: ${counts[type].HAFIF}`);
+                                if (counts[type].ORTA > 0) details.push(`Orta: ${counts[type].ORTA}`);
+                                if (counts[type].AGIR > 0) details.push(`Ağır: ${counts[type].AGIR}`);
+                                
+                                legend.append(`
+                                    <div class="damage-legend-item">
+                                        <div class="damage-legend-dot" style="background-color: ${info.color}"></div>
+                                        <span>${info.text} (${details.join(', ')})</span>
+                                    </div>
+                                `);
+                            }
+                        });
+
+                        if (Object.values(counts).some(c => c.HAFIF + c.ORTA + c.AGIR > 0)) {
+                            $('#carDiagram').after(legend);
+                        }
+
+                        // Hasar notlarını göster
+                        const notes = damagePoints.filter(p => p.note);
+                        if (notes.length > 0) {
+                            const notesContainer = $('<div>').addClass('damage-notes');
+                            notesContainer.append('<h6 class="mb-3">Hasar Notları:</h6>');
+                            
+                            notes.forEach(point => {
+                                notesContainer.append(`
+                                    <div class="damage-note-item">
+                                        <strong>${types[point.type].text} (${point.severity.toLowerCase()})</strong>: 
+                                        ${point.note}
+                                    </div>
+                                `);
+                            });
+
+                            legend.after(notesContainer);
+                        }
+                    } catch (e) {
+                        console.error('Hasar verisi yüklenirken hata oluştu:', e);
+                    }
+                }
+            });
+        </script>
+    </section>
+</body>
+</html> 

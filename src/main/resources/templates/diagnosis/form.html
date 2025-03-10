@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Arıza Teşhis Formu</title>
+</head>
+<body>
+    <section>
+        <!-- Araç Bilgi Kartı -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <i class="bi bi-car-front-fill display-4 text-primary"></i>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-1" th:text="${vehicle.brand + ' ' + vehicle.model}">Toyota Corolla</h4>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary me-2" th:text="${vehicle.plate}">34ABC123</span>
+                                    <span class="badge bg-secondary" th:text="${vehicle.year}">2020</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted mb-1">Araç Sahibi</div>
+                                <h5 class="mb-1" th:text="${vehicle.ownerName}">Ahmet Yılmaz</h5>
+                                <div class="d-flex align-items-center justify-content-end">
+                                    <i class="bi bi-telephone-fill me-2 text-success"></i>
+                                    <span th:text="${vehicle.ownerPhone}">0555-555-5555</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Başlığı -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-tools me-2"></i>Arıza Teşhis Formu
+            </h2>
+            <a th:href="@{/vehicles/{id}(id=${vehicle.id})}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Araca Dön
+            </a>
+        </div>
+
+        <!-- Teşhis Formu -->
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/diagnoses}" method="post" th:object="${diagnosis}">
+                    <input type="hidden" name="vehicleId" th:value="${vehicle.id}">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-person me-1"></i>Teknisyen*
+                            </label>
+                            <input type="text" class="form-control" th:field="*{diagnosedBy}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-speedometer2 me-1"></i>Kilometre*
+                            </label>
+                            <input type="number" class="form-control" th:field="*{currentKilometer}" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">
+                                <i class="bi bi-chat-dots me-1"></i>Müşteri Şikayeti*
+                            </label>
+                            <textarea class="form-control" th:field="*{customerComplaint}" rows="3" required></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">
+                                <i class="bi bi-clipboard me-1"></i>Teşhis Notları
+                            </label>
+                            <textarea class="form-control" th:field="*{diagnosisNotes}" rows="3"></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">
+                                <i class="bi bi-list-check me-1"></i>Önerilen İşlemler
+                            </label>
+                            <textarea class="form-control" th:field="*{recommendedActions}" rows="3"></textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-currency-dollar me-1"></i>Tahmini Maliyet (TL)
+                            </label>
+                            <input type="number" class="form-control" th:field="*{estimatedCost}" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-2"></i>Kaydet
+                        </button>
+                        <a th:href="@{/vehicles/{id}(id=${vehicle.id})}" class="btn btn-secondary ms-2">
+                            <i class="bi bi-x-circle me-2"></i>İptal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

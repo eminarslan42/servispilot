@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Araç Ekspertiz Formu</title>
+</head>
+<body>
+    <section>
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-clipboard-check me-2"></i>Araç Ekspertiz Formu
+                </h2>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="@{/inspections}" method="post" th:object="${inspection}">
+                        <input type="hidden" th:field="*{id}" />
+                        <input type="hidden" th:field="*{damageData}" id="damageDataInput" />
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Vehicle Selection -->
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Araç</label>
+                                    <div th:if="${inspection.vehicle != null}">
+                                        <input type="hidden" th:field="*{vehicle.id}" />
+                                        <input type="text" class="form-control" 
+                                               th:value="${inspection.vehicle.plate + ' - ' + inspection.vehicle.brand + ' ' + inspection.vehicle.model}" 
+                                               readonly />
+                                    </div>
+                                    <select th:unless="${inspection.vehicle != null}" 
+                                            class="form-select" 
+                                            th:field="*{vehicle.id}" 
+                                            required>
+                                        <option value="">Araç Seçin</option>
+                                        <option th:each="vehicle : ${vehicles}"
+                                                th:value="${vehicle.id}"
+                                                th:text="${vehicle.plate + ' - ' + vehicle.brand + ' ' + vehicle.model}">
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Basic Fields -->
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-list-check me-1"></i>Kontrol Tipi
+                                    </label>
+                                    <select class="form-select" th:field="*{inspectionType}" required>
+                                        <option value="GIRIS">Giriş Kontrolü</option>
+                                        <option value="CIKIS">Çıkış Kontrolü</option>
+                                        <option value="PERIYODIK">Periyodik Kontrol</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-person me-1"></i>Kontrol Eden
+                                    </label>
+                                    <input type="text" class="form-control" th:field="*{inspector}" required />
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-speedometer2 me-1"></i>Kilometre
+                                    </label>
+                                    <input type="number" class="form-control" th:field="*{currentKilometer}" required />
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-fuel-pump me-1"></i>Yakıt Durumu
+                                    </label>
+                                    <select class="form-select" th:field="*{fuelLevel}">
+                                        <option value="EMPTY">Boş</option>
+                                        <option value="QUARTER">1/4</option>
+                                        <option value="HALF">1/2</option>
+                                        <option value="THREE_QUARTERS">3/4</option>
+                                        <option value="FULL">Dolu</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- Equipment Checkboxes -->
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Araç Ekipmanları</label>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" th:field="*{hasSpareWheel}" />
+                                        <label class="form-check-label">Stepne</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" th:field="*{hasJack}" />
+                                        <label class="form-check-label">Kriko</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" th:field="*{hasFirstAidKit}" />
+                                        <label class="form-check-label">İlk Yardım Çantası</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" th:field="*{hasWarningTriangle}" />
+                                        <label class="form-check-label">Reflektör</label>
+                                    </div>
+                                </div>
+
+                                <!-- Ratings -->
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Dış Görünüm Durumu</label>
+                                    <input type="hidden" th:field="*{exteriorCondition}" id="exteriorConditionInput" />
+                                    <div class="condition-rating" data-rating-field="exteriorCondition">
+                                        <i class="bi bi-star" th:each="i : ${#numbers.sequence(1, 5)}" th:data-value="${i}"></i>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label">İç Görünüm Durumu</label>
+                                    <input type="hidden" th:field="*{interiorCondition}" id="interiorConditionInput" />
+                                    <div class="condition-rating" data-rating-field="interiorCondition">
+                                        <i class="bi bi-star" th:each="i : ${#numbers.sequence(1, 5)}" th:data-value="${i}"></i>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Mekanik Durum</label>
+                                    <input type="hidden" th:field="*{mechanicalCondition}" id="mechanicalConditionInput" />
+                                    <div class="condition-rating" data-rating-field="mechanicalCondition">
+                                        <i class="bi bi-star" th:each="i : ${#numbers.sequence(1, 5)}" th:data-value="${i}"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group mt-4">
+                            <label class="form-label">Notlar</label>
+                            <textarea class="form-control" th:field="*{notes}" rows="4"></textarea>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">Kaydet</button>
+                            <a th:href="@{/vehicles}" class="btn btn-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Hasar/Çizik İşaretleme
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="damage-type mb-3">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-danger damage-type-btn" data-type="HASAR">
+                                    <i class="bi bi-x-circle me-1"></i>Hasar
+                                </button>
+                                <button type="button" class="btn btn-warning damage-type-btn" data-type="CIZIK">
+                                    <i class="bi bi-slash-lg me-1"></i>Çizik
+                                </button>
+                                <button type="button" class="btn btn-info damage-type-btn" data-type="BOYA">
+                                    <i class="bi bi-brush me-1"></i>Boya
+                                </button>
+                                <button type="button" class="btn btn-secondary damage-type-btn" data-type="DELETE">
+                                    <i class="bi bi-eraser me-1"></i>Sil
+                                </button>
+                            </div>
+                        </div>
+                        <div class="damage-severity mb-3">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-secondary severity-btn" data-severity="HAFIF">
+                                    <i class="bi bi-1-circle me-1"></i>Hafif
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary severity-btn" data-severity="ORTA">
+                                    <i class="bi bi-2-circle me-1"></i>Orta
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary severity-btn" data-severity="AGIR">
+                                    <i class="bi bi-3-circle me-1"></i>Ağır
+                                </button>
+                            </div>
+                        </div>
+                        <div class="car-diagram" id="carDiagram"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .car-diagram {
+                position: relative;
+                width: 800px;
+                height: 600px;
+                margin: 0 auto;
+                background-image: url('/images/car-diagram.png');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                border: 1px solid #dee2e6;
+                border-radius: 0.25rem;
+            }
+            .damage-point {
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                cursor: pointer;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+                transition: all 0.3s ease;
+            }
+            .damage-point:hover {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            .damage-point[data-severity="HAFIF"] {
+                opacity: 0.6;
+                width: 16px;
+                height: 16px;
+            }
+            .damage-point[data-severity="ORTA"] {
+                opacity: 0.8;
+                width: 20px;
+                height: 20px;
+            }
+            .damage-point[data-severity="AGIR"] {
+                opacity: 1;
+                width: 24px;
+                height: 24px;
+            }
+            .damage-severity {
+                margin-left: 1rem;
+                display: inline-block;
+            }
+            .tooltip {
+                font-size: 14px;
+            }
+            .condition-rating {
+                font-size: 24px;
+            }
+            .condition-rating i {
+                cursor: pointer;
+                color: #dee2e6;
+                margin-right: 2px;
+            }
+            .condition-rating i.active {
+                color: #ffc107;
+            }
+
+            /* Modal Styles */
+            .modal-content {
+                border: none;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+
+            .modal-header {
+                border-bottom: 1px solid #dee2e6;
+                padding: 1rem;
+            }
+
+            .modal-body {
+                padding: 1.5rem;
+            }
+
+            .modal-footer {
+                border-top: 1px solid #dee2e6;
+                padding: 1rem;
+            }
+
+            #damageNote {
+                resize: none;
+                border: 1px solid #dee2e6;
+                transition: border-color 0.2s ease;
+            }
+
+            #damageNote:focus {
+                border-color: #3498db;
+                box-shadow: none;
+            }
+        </style>
+
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script th:inline="javascript">
+        $(function() {
+            // Global variables
+            var currentDamageType = 'HASAR';
+            var currentSeverity = 'ORTA';
+            var damagePoints = [];
+
+            // Get initial data
+            try {
+                damagePoints = JSON.parse([[${inspection.damageData}]] || '[]');
+            } catch (e) {
+                damagePoints = [];
+            }
+
+            // Damage type buttons
+            $('.damage-type-btn').click(function() {
+                var type = $(this).data('type');
+                currentDamageType = type;
+                $('.damage-type .btn').removeClass('active');
+                $(this).addClass('active');
+            });
+
+            // Severity buttons
+            $('.severity-btn').click(function() {
+                var severity = $(this).data('severity');
+                currentSeverity = severity;
+                $('.damage-severity .btn').removeClass('active');
+                $(this).addClass('active');
+            });
+
+            // Car diagram click
+            $('#carDiagram').click(function(e) {
+                if (currentDamageType === 'DELETE') return;
+
+                var rect = this.getBoundingClientRect();
+                var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(2);
+                var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(2);
+
+                damagePoints.push({
+                    x: x,
+                    y: y,
+                    type: currentDamageType,
+                    severity: currentSeverity
+                });
+
+                updateDamagePoints();
+            });
+
+            // Update damage points
+            function updateDamagePoints() {
+                $('#carDiagram .damage-point').remove();
+
+                damagePoints.forEach(function(point, index) {
+                    var color;
+                    switch(point.type) {
+                        case 'HASAR': color = '#dc3545'; break;
+                        case 'CIZIK': color = '#ffc107'; break;
+                        case 'BOYA': color = '#0dcaf0'; break;
+                        default: color = '#6c757d';
+                    }
+
+                    $('<div>')
+                        .addClass('damage-point')
+                        .attr('data-type', point.type)
+                        .attr('data-severity', point.severity)
+                        .css({
+                            left: point.x + '%',
+                            top: point.y + '%',
+                            backgroundColor: color
+                        })
+                        .click(function(e) {
+                            if (currentDamageType === 'DELETE') {
+                                damagePoints.splice(index, 1);
+                                updateDamagePoints();
+                            }
+                            e.stopPropagation();
+                        })
+                        .appendTo('#carDiagram');
+                });
+
+                $('#damageDataInput').val(JSON.stringify(damagePoints));
+            }
+
+            // Star rating system
+            $('.condition-rating i').hover(
+                function() {
+                    var value = $(this).data('value');
+                    var container = $(this).parent();
+                    highlightStars(container, value);
+                },
+                function() {
+                    var container = $(this).parent();
+                    var field = container.data('rating-field');
+                    var value = $('#' + field + 'Input').val();
+                    highlightStars(container, value);
+                }
+            ).click(function() {
+                var value = $(this).data('value');
+                var container = $(this).parent();
+                var field = container.data('rating-field');
+                $('#' + field + 'Input').val(value);
+                highlightStars(container, value);
+            });
+
+            function highlightStars(container, value) {
+                container.find('i').each(function(index) {
+                    if (index < value) {
+                        $(this).removeClass('bi-star').addClass('bi-star-fill text-warning');
+                    } else {
+                        $(this).removeClass('bi-star-fill text-warning').addClass('bi-star');
+                    }
+                });
+            }
+
+            // Initialize
+            $('.damage-type-btn[data-type="HASAR"]').addClass('active');
+            $('.severity-btn[data-severity="ORTA"]').addClass('active');
+            updateDamagePoints();
+
+            // Set initial ratings
+            var exteriorCondition = [[${inspection.exteriorCondition}]] || 0;
+            var interiorCondition = [[${inspection.interiorCondition}]] || 0;
+            var mechanicalCondition = [[${inspection.mechanicalCondition}]] || 0;
+
+            if (exteriorCondition > 0) {
+                $('#exteriorConditionInput').val(exteriorCondition);
+                highlightStars($('.condition-rating[data-rating-field="exteriorCondition"]'), exteriorCondition);
+            }
+            if (interiorCondition > 0) {
+                $('#interiorConditionInput').val(interiorCondition);
+                highlightStars($('.condition-rating[data-rating-field="interiorCondition"]'), interiorCondition);
+            }
+            if (mechanicalCondition > 0) {
+                $('#mechanicalConditionInput').val(mechanicalCondition);
+                highlightStars($('.condition-rating[data-rating-field="mechanicalCondition"]'), mechanicalCondition);
+            }
+        });
+        </script>
+    </section>
+</body>
+</html> 

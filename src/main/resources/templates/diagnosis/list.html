@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Arıza Teşhis Listesi</title>
+</head>
+<body>
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-tools me-2"></i>Arıza Teşhis Listesi
+                <small class="text-muted" th:text="${vehicle.plate}"></small>
+            </h2>
+            <div>
+                <a th:href="@{/vehicles/{id}(id=${vehicle.id})}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Araca Dön
+                </a>
+                <a th:href="@{/diagnoses/new(vehicleId=${vehicle.id})}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Yeni Teşhis
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Teknisyen</th>
+                                <th>Kilometre</th>
+                                <th>Müşteri Şikayeti</th>
+                                <th>Tespit Edilen Arızalar</th>
+                                <th>Durum</th>
+                                <th>Tahmini Maliyet</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="diagnosis : ${diagnoses}">
+                                <td th:text="${#temporals.format(diagnosis.diagnosisDate, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                <td th:text="${diagnosis.diagnosedBy}">Ahmet Tekniker</td>
+                                <td th:text="${diagnosis.currentKilometer + ' km'}">50000 km</td>
+                                <td>
+                                    <span th:text="${#strings.abbreviate(diagnosis.customerComplaint, 50)}">Motor sesi geliyor</span>
+                                </td>
+                                <td>
+                                    <span th:each="fault : ${diagnosis.detectedFaults}" 
+                                          class="badge bg-danger me-1" 
+                                          th:text="${fault}">Arıza</span>
+                                </td>
+                                <td>
+                                    <span th:class="${diagnosis.status == 'Yeni' ? 'badge bg-primary' : 
+                                                    diagnosis.status == 'İnceleniyor' ? 'badge bg-warning' : 
+                                                    diagnosis.status == 'İptal' ? 'badge bg-danger' :
+                                                    'badge bg-success'}" 
+                                          th:text="${diagnosis.status}">Durum</span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(diagnosis.estimatedCost, 0, 'COMMA', 2, 'POINT') + ' TL'}">1000.00 TL</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/diagnoses/{id}(id=${diagnosis.id})}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(diagnoses)}">
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="bi bi-tools display-1"></i>
+                                        <p class="mt-3">Henüz arıza teşhis kaydı bulunmuyor.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

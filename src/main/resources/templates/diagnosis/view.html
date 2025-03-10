@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Arıza Teşhis Detayı</title>
+</head>
+<body>
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-tools me-2"></i>Arıza Teşhis Detayı
+            </h2>
+            <div>
+                <a th:href="@{/diagnoses/vehicle/{id}(id=${diagnosis.vehicle.id})}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Teşhis Listesine Dön
+                </a>
+                <div class="btn-group ms-2">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                        Durum Güncelle
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <form th:action="@{/diagnoses/{id}/update-status(id=${diagnosis.id})}" method="post">
+                                <input type="hidden" name="status" value="Yeni">
+                                <button type="submit" class="dropdown-item">Yeni</button>
+                            </form>
+                        </li>
+                        <li>
+                            <form th:action="@{/diagnoses/{id}/update-status(id=${diagnosis.id})}" method="post">
+                                <input type="hidden" name="status" value="İnceleniyor">
+                                <button type="submit" class="dropdown-item">İnceleniyor</button>
+                            </form>
+                        </li>
+                        <li>
+                            <form th:action="@{/diagnoses/{id}/update-status(id=${diagnosis.id})}" method="post">
+                                <input type="hidden" name="status" value="Tamamlandı">
+                                <button type="submit" class="dropdown-item">Tamamlandı</button>
+                            </form>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form th:action="@{/diagnoses/{id}/update-status(id=${diagnosis.id})}" method="post">
+                                <input type="hidden" name="status" value="İptal">
+                                <button type="submit" class="dropdown-item text-danger">İptal</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                <a th:href="@{/diagnoses/{id}/pdf(id=${diagnosis.id})}" class="btn btn-danger ms-2" target="_blank">
+                    <i class="bi bi-file-pdf me-2"></i>PDF Yazdır
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-2"></i>Teşhis Bilgileri
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Teknisyen</label>
+                                <div th:text="${diagnosis.diagnosedBy}">Ahmet Tekniker</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Kilometre</label>
+                                <div th:text="${diagnosis.currentKilometer + ' km'}">50000 km</div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted">Müşteri Şikayeti</label>
+                                <div th:text="${diagnosis.customerComplaint}">Şikayet detayı...</div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted">Belirtiler</label>
+                                <div>
+                                    <span th:each="symptom : ${diagnosis.symptoms}" 
+                                          class="badge bg-warning me-1" 
+                                          th:text="${symptom}">Belirti</span>
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted">Tespit Edilen Arızalar</label>
+                                <div>
+                                    <span th:each="fault : ${diagnosis.detectedFaults}" 
+                                          class="badge bg-danger me-1" 
+                                          th:text="${fault}">Arıza</span>
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted">Teşhis Notları</label>
+                                <div th:text="${diagnosis.diagnosisNotes}">Notlar...</div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted">Önerilen İşlemler</label>
+                                <div th:text="${diagnosis.recommendedActions}">Öneriler...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-car-front me-2"></i>Araç Bilgileri
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Plaka</label>
+                            <div class="h5" th:text="${diagnosis.vehicle.plate}">34ABC123</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Araç</label>
+                            <div th:text="${diagnosis.vehicle.brand + ' ' + diagnosis.vehicle.model}">Toyota Corolla</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Sahibi</label>
+                            <div th:text="${diagnosis.vehicle.ownerName}">Ahmet Yılmaz</div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Durum</label>
+                            <div>
+                                <span th:class="${diagnosis.status == 'Yeni' ? 'badge bg-primary' : 
+                                                diagnosis.status == 'İnceleniyor' ? 'badge bg-warning' : 
+                                                diagnosis.status == 'İptal' ? 'badge bg-danger' :
+                                                'badge bg-success'}" 
+                                      th:text="${diagnosis.status}">Durum</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label text-muted">Tahmini Maliyet</label>
+                            <div class="h4" th:text="${#numbers.formatDecimal(diagnosis.estimatedCost, 0, 'COMMA', 2, 'POINT') + ' TL'}">
+                                1000.00 TL
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

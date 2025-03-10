@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Yeni Servis Hatırlatması</title>
+</head>
+<body>
+    <section th:fragment="content">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card animate__animated animate__fadeIn">
+                    <div class="card-header bg-white py-3">
+                        <h4 class="mb-0">
+                            <i class="bi bi-bell-fill me-2 text-warning"></i>Yeni Servis Hatırlatması
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/reminders}" th:object="${reminder}" method="post" class="needs-validation" novalidate>
+                            <div class="row g-3">
+                                <!-- Araç Seçimi -->
+                                <div class="col-12 mb-3" th:if="${reminder.vehicle == null}">
+                                    <label class="form-label">
+                                        <i class="bi bi-car-front me-1"></i>Araç*
+                                    </label>
+                                    <select class="form-select form-select-lg" th:field="*{vehicle}" required>
+                                        <option value="">Araç Seçin</option>
+                                        <option th:each="vehicle : ${vehicles}"
+                                                th:value="${vehicle.id}"
+                                                th:text="${vehicle.plate + ' - ' + vehicle.brand + ' ' + vehicle.model}">
+                                            34ABC123 - Toyota Corolla
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Lütfen bir araç seçin
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3" th:if="${reminder.vehicle != null}">
+                                    <input type="hidden" th:field="*{vehicle.id}">
+                                    <div class="alert alert-info d-flex align-items-center">
+                                        <i class="bi bi-car-front-fill me-2"></i>
+                                        <div>
+                                            <strong th:text="${reminder.vehicle.plate}">34ABC123</strong>
+                                            <span class="ms-2" th:text="${reminder.vehicle.brand + ' ' + reminder.vehicle.model}">
+                                                Toyota Corolla
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Hatırlatma Detayları -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-tag me-1"></i>Hatırlatma Başlığı*
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" 
+                                           th:field="*{title}" required
+                                           placeholder="Örn: Periyodik Bakım">
+                                    <div class="invalid-feedback">
+                                        Lütfen bir başlık girin
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-list-check me-1"></i>Hatırlatma Tipi*
+                                    </label>
+                                    <select class="form-select form-select-lg" th:field="*{reminderType}" required>
+                                        <option value="">Tip Seçin</option>
+                                        <option value="Periyodik Bakım">Periyodik Bakım</option>
+                                        <option value="Yağ Değişimi">Yağ Değişimi</option>
+                                        <option value="Lastik Değişimi">Lastik Değişimi</option>
+                                        <option value="Muayene">Muayene</option>
+                                        <option value="Sigorta">Sigorta</option>
+                                        <option value="Diğer">Diğer</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Lütfen bir hatırlatma tipi seçin
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-card-text me-1"></i>Açıklama
+                                    </label>
+                                    <textarea class="form-control" th:field="*{description}" 
+                                              rows="3" placeholder="Hatırlatma detaylarını girin..."></textarea>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar me-1"></i>Hatırlatma Tarihi*
+                                    </label>
+                                    <input type="datetime-local" class="form-control form-control-lg" 
+                                           th:field="*{reminderDate}" required>
+                                    <div class="invalid-feedback">
+                                        Lütfen bir hatırlatma tarihi seçin
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar-check me-1"></i>Sonraki Servis Tarihi
+                                    </label>
+                                    <input type="datetime-local" class="form-control form-control-lg" 
+                                           th:field="*{nextServiceDate}">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-speedometer2 me-1"></i>Sonraki Servis Kilometresi
+                                    </label>
+                                    <input type="number" class="form-control form-control-lg" 
+                                           th:field="*{nextServiceKilometer}"
+                                           placeholder="Örn: 50000">
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <a th:href="@{/vehicles/{id}(id=${reminder.vehicle?.id})}" 
+                                   class="btn btn-light btn-lg px-4">
+                                    <i class="bi bi-x-circle me-2"></i>İptal
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-save me-2"></i>Kaydet
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Form validation
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms).forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+            })()
+        </script>
+    </section>
+</body>
+</html> 

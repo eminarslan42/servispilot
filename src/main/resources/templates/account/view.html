@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title th:text="${account.name}">Hesap Detayı</title>
+</head>
+<body>
+    <section th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-person-circle me-2"></i>
+                <span th:text="${account.name}">Hesap Detayı</span>
+            </h2>
+            <div class="btn-group">
+                <a th:href="@{/accounts}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Listeye Dön
+                </a>
+                <a th:href="@{/transactions/new(accountId=${account.id})}" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-1"></i>Yeni İşlem
+                </a>
+                <a th:href="@{/accounts/{id}/edit(id=${account.id})}" class="btn btn-warning text-white">
+                    <i class="bi bi-pencil me-1"></i>Düzenle
+                </a>
+                <button type="button"
+                        class="btn btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal">
+                    <i class="bi bi-trash me-1"></i>Sil
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4">
+                <!-- Hesap Bilgileri -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center mb-4">
+                            <i class="bi bi-info-circle me-2"></i>Hesap Bilgileri
+                        </h5>
+
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="flex-shrink-0">
+                                <div class="icon-circle bg-primary">
+                                    <i class="bi bi-person-circle text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="small text-muted">Hesap Adı</div>
+                                <div class="fw-bold" th:text="${account.name}">Hesap Adı</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="flex-shrink-0">
+                                <div th:class="${'icon-circle ' + (account.balance >= 0 ? 'bg-success' : 'bg-danger')}">
+                                    <i class="bi bi-wallet2 text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="small text-muted">Güncel Bakiye</div>
+                                <div class="fw-bold"
+                                     th:class="${account.balance >= 0 ? 'text-success' : 'text-danger'}"
+                                     th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')} + ' TL'">
+                                    0.00 TL
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- İletişim Bilgileri -->
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-telephone me-2"></i>İletişim Bilgileri
+                        </h6>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2" th:if="${account.phone}">
+                                <i class="bi bi-telephone me-2 text-success"></i>
+                                <span th:text="${account.phone}">Telefon</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2" th:if="${account.email}">
+                                <i class="bi bi-envelope me-2 text-primary"></i>
+                                <span th:text="${account.email}">E-posta</span>
+                            </div>
+                            <div class="d-flex align-items-center" th:if="${account.address}">
+                                <i class="bi bi-geo-alt me-2 text-danger"></i>
+                                <span th:text="${account.address}">Adres</span>
+                            </div>
+                        </div>
+
+                        <!-- Vergi Bilgileri -->
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-file-text me-2"></i>Vergi Bilgileri
+                        </h6>
+                        <div>
+                            <div class="d-flex align-items-center mb-2" th:if="${account.taxNumber}">
+                                <i class="bi bi-upc me-2 text-info"></i>
+                                <span th:text="${account.taxNumber}">Vergi No</span>
+                            </div>
+                            <div class="d-flex align-items-center" th:if="${account.taxOffice}">
+                                <i class="bi bi-building me-2 text-secondary"></i>
+                                <span th:text="${account.taxOffice}">Vergi Dairesi</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İstatistikler -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center mb-4">
+                            <i class="bi bi-graph-up me-2"></i>İstatistikler
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="p-3 border rounded bg-success bg-opacity-10">
+                                    <div class="text-success">Alacak Toplamı</div>
+                                    <h4 class="mb-0" th:text="${#numbers.formatDecimal(totalCredit ?: 0, 1, 'COMMA', 2, 'POINT')} + ' TL'">0.00 TL</h4>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 border rounded bg-danger bg-opacity-10">
+                                    <div class="text-danger">Borç Toplamı</div>
+                                    <h4 class="mb-0" th:text="${#numbers.formatDecimal(totalDebit ?: 0, 1, 'COMMA', 2, 'POINT')} + ' TL'">0.00 TL</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <!-- İşlem Listesi -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <i class="bi bi-clock-history me-2"></i>Son İşlemler
+                            </div>
+                            <a th:href="@{/transactions/new(accountId=${account.id})}" class="btn btn-sm btn-success">
+                                <i class="bi bi-plus-circle me-1"></i>Yeni İşlem
+                            </a>
+                        </h5>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Açıklama</th>
+                                        <th>Belge No</th>
+                                        <th class="text-end">Tutar</th>
+                                        <th style="width: 100px">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="transaction : ${transactions}" class="animate__animated animate__fadeIn">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-calendar-event me-2 text-secondary"></i>
+                                                <span th:text="${#temporals.format(transaction.transactionDate, 'dd/MM/yyyy')}">01/01/2024</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-card-text me-2 text-primary"></i>
+                                                <span th:text="${transaction.description}">Açıklama</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-file-text me-2 text-secondary"></i>
+                                                <span th:text="${transaction.documentNumber ?: '-'}">-</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div th:with="isCredit=${transaction.type.name() == 'CREDIT'}"
+                                                 th:class="${'badge ' + (isCredit ? 'bg-success' : 'bg-danger')}">
+                                                <i th:class="${'bi me-1 ' + (isCredit ? 'bi-plus-circle' : 'bi-dash-circle')}"></i>
+                                                <span th:text="${#numbers.formatDecimal(transaction.amount, 1, 'COMMA', 2, 'POINT')} + ' TL'">
+                                                    0.00 TL
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a th:href="@{/transactions/{id}(id=${transaction.id})}" 
+                                                   class="btn btn-sm btn-primary"
+                                                   data-bs-toggle="tooltip"
+                                                   title="Detayları Görüntüle">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-danger"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#deleteTransactionModal' + ${transaction.id}"
+                                                        title="Sil">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(transactions)}">
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="bi bi-clock-history display-1"></i>
+                                                <p class="mt-3">Henüz hiç işlem kaydı bulunmuyor.</p>
+                                                <a th:href="@{/transactions/new(accountId=${account.id})}" class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-plus-circle me-1"></i>Yeni İşlem Oluştur
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hesap Silme Modalı -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" style="z-index: 1060;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle me-2 text-danger"></i>
+                            Hesap Silme Onayı
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            <strong th:text="${account.name}"></strong> hesabını silmek istediğinizden emin misiniz?
+                        </p>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Bu işlem geri alınamaz ve hesaba ait tüm işlemler silinecektir.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>İptal
+                        </button>
+                        <form th:action="@{/accounts/{id}/delete(id=${account.id})}"
+                              method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i>Sil
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- İşlem Silme Modalları -->
+        <div th:each="transaction : ${transactions}">
+            <div class="modal fade" th:id="'deleteTransactionModal' + ${transaction.id}" tabindex="-1" style="z-index: 1060;">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle me-2 text-danger"></i>
+                                İşlem Silme Onayı
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Bu işlemi silmek istediğinizden emin misiniz?</p>
+                            <p class="text-muted small mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Bu işlem geri alınamaz.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>İptal
+                            </button>
+                            <form th:action="@{/transactions/{id}/delete(id=${transaction.id})}"
+                                  method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash me-1"></i>Sil
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .icon-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+    </style>
+
+    <script th:inline="javascript">
+        // Tooltips'leri etkinleştir
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+</body>
+</html> 

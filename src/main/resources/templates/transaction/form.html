@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Yeni İşlem</title>
+</head>
+<body>
+    <section th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-plus-circle me-2"></i>Yeni İşlem
+            </h2>
+            <a th:href="@{/accounts}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Cari Hesaplara Dön
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/transactions}" method="post" class="needs-validation" novalidate>
+                            <input type="hidden" name="id" th:value="${transaction.id}">
+                            
+                            <div class="row g-4">
+                                <div class="col-md-6" th:if="${transaction.account == null}">
+                                    <label for="account" class="form-label">
+                                        <i class="bi bi-person-circle me-1"></i>Cari Hesap
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="account" name="account" required>
+                                        <option value="">Hesap Seçin</option>
+                                        <option th:each="acc : ${accounts}"
+                                                th:value="${acc.id}"
+                                                th:text="${acc.name}">Hesap Adı</option>
+                                    </select>
+                                    <div class="invalid-feedback">Lütfen bir hesap seçin.</div>
+                                </div>
+                                <input type="hidden" name="account" th:value="${transaction.account != null ? transaction.account.id : ''}" th:if="${transaction.account != null}">
+
+                                <div class="col-md-6">
+                                    <label for="type" class="form-label">
+                                        <i class="bi bi-arrow-left-right me-1"></i>İşlem Tipi
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="type" name="type" required>
+                                        <option value="">Tip Seçin</option>
+                                        <option value="CREDIT" th:selected="${transaction.type == 'CREDIT'}">Alacak (+)</option>
+                                        <option value="DEBIT" th:selected="${transaction.type == 'DEBIT'}">Borç (-)</option>
+                                    </select>
+                                    <div class="invalid-feedback">Lütfen işlem tipini seçin.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="transactionDate" class="form-label">
+                                        <i class="bi bi-calendar-event me-1"></i>İşlem Tarihi
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control" id="transactionDate" 
+                                           name="transactionDate" required>
+                                    <div class="invalid-feedback">Lütfen bir tarih seçin.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="amount" class="form-label">
+                                        <i class="bi bi-currency-dollar me-1"></i>Tutar
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="amount" 
+                                               name="amount" th:value="${transaction.amount}" required step="0.01" min="0">
+                                        <span class="input-group-text">TL</span>
+                                        <div class="invalid-feedback">Lütfen geçerli bir tutar girin.</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="documentNumber" class="form-label">
+                                        <i class="bi bi-file-text me-1"></i>Belge Numarası
+                                    </label>
+                                    <input type="text" class="form-control" id="documentNumber" 
+                                           name="documentNumber" th:value="${transaction.documentNumber}" placeholder="Opsiyonel">
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="description" class="form-label">
+                                        <i class="bi bi-card-text me-1"></i>Açıklama
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea class="form-control" id="description" 
+                                              name="description" th:text="${transaction.description}" required rows="2"
+                                              placeholder="İşlem açıklaması girin"></textarea>
+                                    <div class="invalid-feedback">Lütfen bir açıklama girin.</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="notes" class="form-label">
+                                        <i class="bi bi-pencil me-1"></i>Notlar
+                                    </label>
+                                    <textarea class="form-control" id="notes" 
+                                              name="notes" th:text="${transaction.notes}" rows="2"
+                                              placeholder="Opsiyonel notlar"></textarea>
+                                </div>
+
+                                <div class="col-12">
+                                    <hr>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a th:href="${transaction.account != null ? '/accounts/' + transaction.account.id : '/accounts'}" 
+                                           class="btn btn-secondary">
+                                            <i class="bi bi-x-circle me-1"></i>İptal
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle me-1"></i>Kaydet
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Form doğrulama
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+
+        // Bugünün tarihini varsayılan olarak ayarla
+        document.addEventListener('DOMContentLoaded', function() {
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById('transactionDate').value = today;
+        });
+    </script>
+</body>
+</html> 

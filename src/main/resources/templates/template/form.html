@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title th:text="${template.id == null ? 'Yeni Bakım Şablonu' : 'Şablon Düzenle'}">Bakım Şablonu</title>
+</head>
+<body>
+    <section th:fragment="content">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card animate__animated animate__fadeIn">
+                    <div class="card-header bg-white py-3">
+                        <h4 class="mb-0">
+                            <i class="bi bi-file-earmark-text me-2 text-primary"></i>
+                            <span th:text="${template.id == null ? 'Yeni Bakım Şablonu' : 'Şablon Düzenle'}">
+                                Bakım Şablonu
+                            </span>
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/templates}" th:object="${template}" method="post" class="needs-validation" novalidate>
+                            <input type="hidden" th:field="*{id}">
+                            
+                            <div class="row g-3">
+                                <!-- Temel Bilgiler -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-tag me-1"></i>Şablon Adı*
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" 
+                                           th:field="*{name}" required
+                                           placeholder="Örn: 10.000 KM Bakımı">
+                                    <div class="invalid-feedback">
+                                        Lütfen şablon adını girin
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-list-check me-1"></i>Servis Tipi*
+                                    </label>
+                                    <select class="form-select form-select-lg" th:field="*{serviceType}" required>
+                                        <option value="">Tip Seçin</option>
+                                        <option value="Periyodik Bakım">Periyodik Bakım</option>
+                                        <option value="Yağ Değişimi">Yağ Değişimi</option>
+                                        <option value="Lastik Değişimi">Lastik Değişimi</option>
+                                        <option value="Fren Bakımı">Fren Bakımı</option>
+                                        <option value="Motor Bakımı">Motor Bakımı</option>
+                                        <option value="Diğer">Diğer</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Lütfen servis tipini seçin
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-card-text me-1"></i>Açıklama
+                                    </label>
+                                    <textarea class="form-control" th:field="*{description}" 
+                                              rows="3" placeholder="Şablon açıklamasını girin..."></textarea>
+                                </div>
+
+                                <!-- Aralık Bilgileri -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-speedometer2 me-1"></i>Kilometre Aralığı
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control form-control-lg" 
+                                               th:field="*{kilometrageInterval}"
+                                               placeholder="Örn: 10000">
+                                        <span class="input-group-text">KM</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar me-1"></i>Ay Aralığı
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control form-control-lg" 
+                                               th:field="*{monthInterval}"
+                                               placeholder="Örn: 6">
+                                        <span class="input-group-text">Ay</span>
+                                    </div>
+                                </div>
+
+                                <!-- Kontrol Listesi -->
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-list-check me-1"></i>Kontrol Listesi
+                                    </label>
+                                    <div id="checkListContainer">
+                                        <div class="input-group mb-2" th:each="item, stat : ${#strings.arraySplit(template.checkList ?: '', '|')}">
+                                            <input type="text" class="form-control check-list-item" 
+                                                   th:value="${item}"
+                                                   placeholder="Kontrol edilecek madde...">
+                                            <button type="button" class="btn btn-outline-danger" onclick="removeCheckListItem(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary mt-2" onclick="addCheckListItem()">
+                                        <i class="bi bi-plus-circle me-2"></i>Madde Ekle
+                                    </button>
+                                    <input type="hidden" th:field="*{checkList}" id="checkListInput">
+                                </div>
+
+                                <!-- Gerekli Parçalar -->
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-tools me-1"></i>Gerekli Parçalar
+                                    </label>
+                                    <div id="partsContainer">
+                                        <div class="input-group mb-2" th:each="part, stat : ${#strings.arraySplit(template.requiredParts ?: '', '|')}">
+                                            <input type="text" class="form-control parts-item" 
+                                                   th:value="${part}"
+                                                   placeholder="Gerekli parça...">
+                                            <button type="button" class="btn btn-outline-danger" onclick="removePartsItem(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary mt-2" onclick="addPartsItem()">
+                                        <i class="bi bi-plus-circle me-2"></i>Parça Ekle
+                                    </button>
+                                    <input type="hidden" th:field="*{requiredParts}" id="partsInput">
+                                </div>
+
+                                <!-- Maliyet ve Süre -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-clock me-1"></i>Tahmini Süre
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control form-control-lg" 
+                                               th:field="*{estimatedDuration}"
+                                               placeholder="Örn: 120">
+                                        <span class="input-group-text">Dakika</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-currency-dollar me-1"></i>Tahmini Maliyet
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control form-control-lg" 
+                                               th:field="*{estimatedCost}"
+                                               placeholder="Örn: 1500">
+                                        <span class="input-group-text">TL</span>
+                                    </div>
+                                </div>
+
+                                <!-- Durum -->
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" 
+                                               th:field="*{isActive}" id="isActive">
+                                        <label class="form-check-label" for="isActive">Şablon Aktif</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <a href="/templates" class="btn btn-light btn-lg px-4">
+                                    <i class="bi bi-x-circle me-2"></i>İptal
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-save me-2"></i>Kaydet
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Form validation
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms).forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        updateCheckList()
+                        updateParts()
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+            })()
+
+            // Kontrol Listesi İşlemleri
+            function addCheckListItem() {
+                const container = document.getElementById('checkListContainer')
+                const div = document.createElement('div')
+                div.className = 'input-group mb-2'
+                div.innerHTML = `
+                    <input type="text" class="form-control check-list-item" placeholder="Kontrol edilecek madde...">
+                    <button type="button" class="btn btn-outline-danger" onclick="removeCheckListItem(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `
+                container.appendChild(div)
+            }
+
+            function removeCheckListItem(button) {
+                button.closest('.input-group').remove()
+            }
+
+            function updateCheckList() {
+                const items = Array.from(document.querySelectorAll('.check-list-item'))
+                    .map(input => input.value.trim())
+                    .filter(value => value !== '')
+                document.getElementById('checkListInput').value = items.join('|')
+            }
+
+            // Parça Listesi İşlemleri
+            function addPartsItem() {
+                const container = document.getElementById('partsContainer')
+                const div = document.createElement('div')
+                div.className = 'input-group mb-2'
+                div.innerHTML = `
+                    <input type="text" class="form-control parts-item" placeholder="Gerekli parça...">
+                    <button type="button" class="btn btn-outline-danger" onclick="removePartsItem(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `
+                container.appendChild(div)
+            }
+
+            function removePartsItem(button) {
+                button.closest('.input-group').remove()
+            }
+
+            function updateParts() {
+                const items = Array.from(document.querySelectorAll('.parts-item'))
+                    .map(input => input.value.trim())
+                    .filter(value => value !== '')
+                document.getElementById('partsInput').value = items.join('|')
+            }
+
+            // Sayfa yüklendiğinde boş kontrol listesi ve parça listesi ekle
+            document.addEventListener('DOMContentLoaded', function() {
+                if (document.querySelectorAll('.check-list-item').length === 0) {
+                    addCheckListItem()
+                }
+                if (document.querySelectorAll('.parts-item').length === 0) {
+                    addPartsItem()
+                }
+            })
+        </script>
+    </section>
+</body>
+</html> 

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Tüm Arıza Teşhisleri</title>
+</head>
+<body>
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-tools me-2"></i>Tüm Arıza Teşhisleri
+            </h2>
+            <div class="btn-group">
+                <a href="/vehicles" class="btn btn-primary">
+                    <i class="bi bi-car-front me-2"></i>Araç Seçerek Teşhis Ekle
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Plaka</th>
+                                <th>Araç</th>
+                                <th>Teknisyen</th>
+                                <th>Müşteri Şikayeti</th>
+                                <th>Durum</th>
+                                <th>Tahmini Maliyet</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="diagnosis : ${diagnoses}" class="align-middle">
+                                <td th:text="${#temporals.format(diagnosis.diagnosisDate, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                <td>
+                                    <span class="badge bg-primary" th:text="${diagnosis.vehicle.plate}">34ABC123</span>
+                                </td>
+                                <td th:text="${diagnosis.vehicle.brand + ' ' + diagnosis.vehicle.model}">Toyota Corolla</td>
+                                <td th:text="${diagnosis.diagnosedBy}">Ahmet Tekniker</td>
+                                <td>
+                                    <span th:text="${#strings.abbreviate(diagnosis.customerComplaint, 50)}">Motor sesi geliyor</span>
+                                </td>
+                                <td>
+                                    <span th:class="${diagnosis.status == 'Yeni' ? 'badge bg-primary' : 
+                                                    diagnosis.status == 'İnceleniyor' ? 'badge bg-warning' : 
+                                                    'badge bg-success'}" 
+                                          th:text="${diagnosis.status}">Durum</span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(diagnosis.estimatedCost, 0, 'COMMA', 2, 'POINT') + ' TL'}">1000.00 TL</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/diagnoses/{id}(id=${diagnosis.id})}" 
+                                           class="btn btn-sm btn-primary" title="Detay">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/vehicles/{id}(id=${diagnosis.vehicle.id})}" 
+                                           class="btn btn-sm btn-secondary" title="Araca Git">
+                                            <i class="bi bi-car-front"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(diagnoses)}">
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="bi bi-tools display-1"></i>
+                                        <p class="mt-3">Henüz arıza teşhis kaydı bulunmuyor.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sayfanın sonuna araç seçim modalını ekleyelim -->
+    <div class="modal fade" id="selectVehicleModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-car-front me-2"></i>Araç Seçin
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Araç Plakası</label>
+                        <select class="form-select form-select-lg" id="vehicleSelect">
+                            <option value="">Araç Seçin</option>
+                            <option th:each="vehicle : ${vehicles}"
+                                    th:value="${vehicle.id}"
+                                    th:text="${vehicle.plate + ' - ' + vehicle.brand + ' ' + vehicle.model}">
+                                34ABC123 - Toyota Corolla
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="redirectToNewDiagnosis()">
+                        <i class="bi bi-arrow-right me-2"></i>Devam Et
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript kodunu ekleyelim -->
+    <script>
+    function redirectToNewDiagnosis() {
+        const vehicleId = document.getElementById('vehicleSelect').value;
+        if (vehicleId) {
+            window.location.href = '/diagnoses/new?vehicleId=' + vehicleId;
+        } else {
+            Swal.fire({
+                title: 'Uyarı!',
+                text: 'Lütfen bir araç seçin',
+                icon: 'warning',
+                confirmButtonText: 'Tamam'
+            });
+        }
+    }
+    </script>
+</body>
+</html> 

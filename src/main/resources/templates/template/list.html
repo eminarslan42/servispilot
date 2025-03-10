@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Bakım Şablonları</title>
+</head>
+<body>
+    <section th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-file-earmark-text me-2"></i>Bakım Şablonları
+            </h2>
+            <a href="/templates/new" class="btn btn-success">
+                <i class="bi bi-plus-circle me-2"></i>Yeni Şablon
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Şablon</th>
+                                        <th>Tip</th>
+                                        <th>Aralık</th>
+                                        <th>Kontrol Listesi</th>
+                                        <th>Maliyet/Süre</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="template : ${templates}" class="align-middle animate__animated animate__fadeIn">
+                                        <td>
+                                            <div class="fw-bold" th:text="${template.name}">10.000 KM Bakımı</div>
+                                            <small class="text-muted" th:if="${template.description}" 
+                                                   th:text="${template.description}">
+                                                Açıklama
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info" th:text="${template.serviceType}">
+                                                Periyodik Bakım
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div th:if="${template.kilometrageInterval != null}">
+                                                <i class="bi bi-speedometer2 me-1 text-primary"></i>
+                                                <span th:text="${template.kilometrageInterval + ' KM'}">10000 KM</span>
+                                            </div>
+                                            <div th:if="${template.monthInterval != null}">
+                                                <i class="bi bi-calendar me-1 text-warning"></i>
+                                                <span th:text="${template.monthInterval + ' Ay'}">6 Ay</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="small">
+                                                <ul class="list-unstyled mb-0">
+                                                    <li th:each="item, stat : ${#strings.arraySplit(template.checkList ?: '', '|')}"
+                                                        th:if="${stat.index < 3}">
+                                                        <i class="bi bi-check2 me-1 text-success"></i>
+                                                        <span th:text="${item}">Kontrol maddesi</span>
+                                                    </li>
+                                                    <li th:if="${#strings.arraySplit(template.checkList ?: '', '|').length > 3}"
+                                                        class="text-muted">
+                                                        <i class="bi bi-three-dots me-1"></i>
+                                                        <span th:text="${#strings.arraySplit(template.checkList, '|').length - 3 + ' madde daha'}">
+                                                            2 madde daha
+                                                        </span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div th:if="${template.estimatedCost != null}">
+                                                <i class="bi bi-currency-dollar me-1 text-success"></i>
+                                                <span th:text="${template.estimatedCost + ' TL'}">1500 TL</span>
+                                            </div>
+                                            <div th:if="${template.estimatedDuration != null}">
+                                                <i class="bi bi-clock me-1 text-info"></i>
+                                                <span th:text="${template.estimatedDuration + ' dk'}">120 dk</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       th:checked="${template.isActive}"
+                                                       onchange="toggleTemplate(this, [[${template.id}]])">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a th:href="@{/templates/{id}/edit(id=${template.id})}" 
+                                                   class="btn btn-outline-primary btn-sm"
+                                                   title="Düzenle">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form th:action="@{/templates/{id}/delete(id=${template.id})}" 
+                                                      method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                            onclick="return confirmDelete(event, 'Bu şablonu silmek istediğinizden emin misiniz?')"
+                                                            title="Sil">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(templates)}">
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="bi bi-file-earmark-x display-1"></i>
+                                                <p class="mt-3">Henüz bakım şablonu bulunmuyor.</p>
+                                                <a href="/templates/new" class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-plus-circle me-1"></i>Yeni Şablon Ekle
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function toggleTemplate(checkbox, id) {
+                fetch(`/templates/${id}/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        showToast('Şablon durumu güncellendi', 'success');
+                    } else {
+                        checkbox.checked = !checkbox.checked;
+                        showToast('Bir hata oluştu', 'error');
+                    }
+                }).catch(error => {
+                    checkbox.checked = !checkbox.checked;
+                    showToast('Bir hata oluştu', 'error');
+                });
+            }
+        </script>
+    </section>
+</body>
+</html> 

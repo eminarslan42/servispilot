@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Araç Detayları</title>
+</head>
+<body>
+    <section th:fragment="content">
+        <!-- Üst Bilgi Kartı -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <div class="vehicle-icon">
+                            <i class="bi bi-car-front-fill display-1 text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-1" th:text="${vehicle.brand + ' ' + vehicle.model}">Toyota Corolla</h3>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary me-2" th:text="${vehicle.plate}">34ABC123</span>
+                                    <span class="badge bg-secondary" th:text="${vehicle.year}">2020</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted mb-1">Araç Sahibi</div>
+                                <h5 class="mb-1" th:text="${vehicle.ownerName}">Ahmet Yılmaz</h5>
+                                <div class="d-flex align-items-center justify-content-end">
+                                    <i class="bi bi-telephone-fill me-2 text-success"></i>
+                                    <span th:text="${vehicle.ownerPhone}">0555-555-5555</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       
+
+        <!-- Servis İstatistikleri -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Toplam Servis</h6>
+                                <h3 class="mb-0" th:text="${#lists.size(serviceRecords)}">0</h3>
+                            </div>
+                            <i class="bi bi-tools display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Toplam Maliyet</h6>
+                                <h3 class="mb-0">
+                                    <span th:if="${not #lists.isEmpty(serviceRecords)}" th:text="${#aggregates.sum(serviceRecords.![cost])} + ' TL'">0 TL</span>
+                                    <span th:if="${#lists.isEmpty(serviceRecords)}">0 TL</span>
+                                </h3>
+                            </div>
+                            <i class="bi bi-currency-dollar display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Son Servis</h6>
+                                <h3 class="mb-0" th:if="${not #lists.isEmpty(serviceRecords)}"
+                                    th:text="${#temporals.format(serviceRecords[0].serviceDate, 'dd/MM/yyyy')}">
+                                    01/01/2024
+                                </h3>
+                                <h3 class="mb-0" th:if="${#lists.isEmpty(serviceRecords)}">-</h3>
+                            </div>
+                            <i class="bi bi-calendar-check display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Son Kilometre</h6>
+                                <h3 class="mb-0" th:if="${not #lists.isEmpty(serviceRecords)}"
+                                    th:text="${serviceRecords[0].kilometerage + ' km'}">
+                                    0 km
+                                </h3>
+                                <h3 class="mb-0" th:if="${#lists.isEmpty(serviceRecords)}">-</h3>
+                            </div>
+                            <i class="bi bi-speedometer2 display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servis Kayıtları -->
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard2-data me-2"></i>Servis Geçmişi
+                </h5>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newServiceModal">
+                    <i class="bi bi-plus-circle me-2"></i>Yeni Servis Kaydı
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Kilometre</th>
+                                <th>İşlem</th>
+                                <th>Teknisyen</th>
+                                <th>Parçalar</th>
+                                <th>Durum</th>
+                                <th>Maliyet</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="record : ${serviceRecords}" class="align-middle animate__animated animate__fadeIn">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-calendar me-2 text-primary"></i>
+                                        <div>
+                                            <div th:text="${#temporals.format(record.serviceDate, 'dd/MM/yyyy')}">01/01/2024</div>
+                                            <small class="text-muted" th:text="${#temporals.format(record.serviceDate, 'HH:mm')}">14:30</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-speedometer2 me-2 text-info"></i>
+                                        <span th:text="${record.kilometerage + ' km'}">50000 km</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div th:text="${record.description}">Yağ Değişimi</div>
+                                    <small class="text-muted" th:if="${record.notes}" th:text="${record.notes}">Ek notlar</small>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person me-2 text-secondary"></i>
+                                        <span th:text="${record.technician}">Mehmet Usta</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:if="${record.parts}" th:text="${record.parts}">Motor Yağı, Yağ Filtresi</span>
+                                    <span th:unless="${record.parts}" class="text-muted">-</span>
+                                </td>
+                                <td>
+                                    <span th:class="${'badge ' + (record.status == 'Tamamlandı' ? 'bg-success' : 
+                                                                 record.status == 'Devam Ediyor' ? 'bg-warning' : 'bg-danger')}"
+                                          th:text="${record.status}">
+                                        Tamamlandı
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-currency-dollar me-1 text-success"></i>
+                                        <span th:text="${record.cost}">500</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline-primary btn-sm" 
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#editServiceModal' + ${record.id}"
+                                                title="Düzenle">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#deleteServiceModal' + ${record.id}"
+                                                title="Sil">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(serviceRecords)}">
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="bi bi-clipboard-x display-1"></i>
+                                        <p class="mt-3">Henüz servis kaydı bulunmuyor.</p>
+                                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newServiceModal">
+                                            <i class="bi bi-plus-circle me-1"></i>Yeni Servis Kaydı Ekle
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arıza Teşhis Geçmişi -->
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-tools me-2"></i>Arıza Teşhis Geçmişi
+                </h5>
+                <a th:href="@{/diagnoses/new(vehicleId=${vehicle.id})}" class="btn btn-warning">
+                    <i class="bi bi-tools me-1"></i>Arıza Teşhisi Ekle
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Teknisyen</th>
+                                <th>Kilometre</th>
+                                <th>Müşteri Şikayeti</th>
+                                <th>Tespit Edilen Arızalar</th>
+                                <th>Durum</th>
+                                <th>Tahmini Maliyet</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="diagnosis : ${diagnoses}" class="align-middle animate__animated animate__fadeIn">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-calendar me-2 text-primary"></i>
+                                        <div>
+                                            <div th:text="${#temporals.format(diagnosis.diagnosisDate, 'dd/MM/yyyy')}">01/01/2024</div>
+                                            <small class="text-muted" th:text="${#temporals.format(diagnosis.diagnosisDate, 'HH:mm')}">14:30</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person me-2 text-secondary"></i>
+                                        <span th:text="${diagnosis.diagnosedBy}">Ahmet Tekniker</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-speedometer2 me-2 text-info"></i>
+                                        <span th:text="${diagnosis.currentKilometer + ' km'}">50000 km</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:text="${#strings.abbreviate(diagnosis.customerComplaint, 50)}">Motor sesi geliyor</span>
+                                </td>
+                                <td>
+                                    <span th:each="fault : ${diagnosis.detectedFaults}" 
+                                          class="badge bg-danger me-1" 
+                                          th:text="${fault}">Arıza</span>
+                                </td>
+                                <td>
+                                    <span th:class="${diagnosis.status == 'Yeni' ? 'badge bg-primary' : 
+                                                    diagnosis.status == 'İnceleniyor' ? 'badge bg-warning' : 
+                                                    diagnosis.status == 'İptal' ? 'badge bg-danger' :
+                                                    'badge bg-success'}" 
+                                          th:text="${diagnosis.status}">Durum</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-currency-dollar me-1 text-success"></i>
+                                        <span th:text="${#numbers.formatDecimal(diagnosis.estimatedCost, 0, 'COMMA', 2, 'POINT') + ' TL'}">1000.00 TL</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/diagnoses/{id}(id=${diagnosis.id})}" 
+                                           class="btn btn-outline-primary btn-sm" title="Detay">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(diagnoses)}">
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="bi bi-tools display-1"></i>
+                                        <p class="mt-3">Henüz arıza teşhis kaydı bulunmuyor.</p>
+                                        <a th:href="@{/diagnoses/new(vehicleId=${vehicle.id})}" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-plus-circle me-1"></i>Yeni Teşhis Ekle
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ekspertiz Geçmişi -->
+        <div class="card mt-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard-check me-2"></i>Ekspertiz Geçmişi
+                </h5>
+                <a th:href="@{/inspections/new(vehicleId=${vehicle.id})}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Yeni Ekspertiz
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Kontrol Tipi</th>
+                                <th>Kontrol Eden</th>
+                                <th>Kilometre</th>
+                                <th>Dış Görünüm</th>
+                                <th>İç Görünüm</th>
+                                <th>Mekanik Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="inspection : ${inspections}" class="align-middle animate__animated animate__fadeIn">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-calendar me-2 text-primary"></i>
+                                        <div>
+                                            <div th:text="${#temporals.format(inspection.createdAt, 'dd/MM/yyyy')}"></div>
+                                            <small class="text-muted" th:text="${#temporals.format(inspection.createdAt, 'HH:mm')}"></small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:class="${'badge ' + 
+                                        (inspection.inspectionType == 'GIRIS' ? 'bg-success' : 
+                                         inspection.inspectionType == 'CIKIS' ? 'bg-danger' : 'bg-info')}"
+                                          th:text="${inspection.inspectionType}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person me-2 text-secondary"></i>
+                                        <span th:text="${inspection.inspector}"></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-speedometer2 me-2 text-info"></i>
+                                        <span th:text="${inspection.currentKilometer + ' km'}"></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="condition-rating">
+                                        <th:block th:if="${inspection.exteriorCondition != null}">
+                                            <th:block th:each="i : ${#numbers.sequence(1, inspection.exteriorCondition)}">
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            </th:block>
+                                        </th:block>
+                                        <th:block th:if="${inspection.exteriorCondition == null}">
+                                            <span class="text-muted">-</span>
+                                        </th:block>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="condition-rating">
+                                        <th:block th:if="${inspection.interiorCondition != null}">
+                                            <th:block th:each="i : ${#numbers.sequence(1, inspection.interiorCondition)}">
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            </th:block>
+                                        </th:block>
+                                        <th:block th:if="${inspection.interiorCondition == null}">
+                                            <span class="text-muted">-</span>
+                                        </th:block>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="condition-rating">
+                                        <th:block th:if="${inspection.mechanicalCondition != null}">
+                                            <th:block th:each="i : ${#numbers.sequence(1, inspection.mechanicalCondition)}">
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            </th:block>
+                                        </th:block>
+                                        <th:block th:if="${inspection.mechanicalCondition == null}">
+                                            <span class="text-muted">-</span>
+                                        </th:block>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/inspections/{id}(id=${inspection.id})}" 
+                                           class="btn btn-sm btn-info" 
+                                           title="Görüntüle">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/inspections/{id}/edit(id=${inspection.id})}" 
+                                           class="btn btn-sm btn-primary"
+                                           title="Düzenle">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form th:action="@{/inspections/{id}/delete(id=${inspection.id})}" 
+                                              method="post" 
+                                              style="display: inline;"
+                                              onsubmit="return confirmDelete(event, 'Bu ekspertiz kaydını silmek istediğinizden emin misiniz?');">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Sil">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(inspections)}">
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="bi bi-clipboard-x display-1"></i>
+                                        <p class="mt-3">Henüz ekspertiz kaydı bulunmuyor.</p>
+                                        <a th:href="@{/inspections/new(vehicleId=${vehicle.id})}" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-plus-circle me-1"></i>Yeni Ekspertiz Ekle
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hata Modal'ı -->
+        <div class="modal fade" id="errorModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">
+                            <i class="bi bi-exclamation-circle me-2"></i>Hata
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="errorMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tamam</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Yeni Servis Kaydı Modal -->
+        <div class="modal fade" id="newServiceModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-wrench me-2"></i>Yeni Servis Kaydı
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/service-records}" method="post">
+                        <input type="hidden" name="vehicleId" th:value="${vehicle.id}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">İşlem Açıklaması*</label>
+                                <textarea class="form-control" name="description" rows="2" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Kilometre*</label>
+                                    <input type="number" class="form-control" name="kilometerage" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Teknisyen*</label>
+                                    <input type="text" class="form-control" name="technician" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Maliyet (TL)*</label>
+                                    <input type="number" class="form-control" name="cost" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Durum*</label>
+                                    <select class="form-select" name="status" required>
+                                        <option value="Tamamlandı">Tamamlandı</option>
+                                        <option value="Devam Ediyor">Devam Ediyor</option>
+                                        <option value="İptal">İptal</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Kullanılan Parçalar</label>
+                                <input type="text" class="form-control" name="parts" placeholder="Örn: Motor Yağı, Yağ Filtresi">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Notlar</label>
+                                <textarea class="form-control" name="notes" rows="2" placeholder="Varsa ek notlar..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servis Kaydı Düzenleme Modalları -->
+        <div th:each="record : ${serviceRecords}" th:id="'editServiceModal' + ${record.id}" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-wrench me-2"></i>Servis Kaydını Düzenle
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/service-records/{id}/update(id=${record.id})}" method="post">
+                        <input type="hidden" name="vehicleId" th:value="${vehicle.id}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">İşlem Açıklaması*</label>
+                                <textarea class="form-control" name="description" rows="2" required th:text="${record.description}"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Kilometre*</label>
+                                    <input type="number" class="form-control" name="kilometerage" required th:value="${record.kilometerage}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Teknisyen*</label>
+                                    <input type="text" class="form-control" name="technician" required th:value="${record.technician}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Maliyet (TL)*</label>
+                                    <input type="number" class="form-control" name="cost" required th:value="${record.cost}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Durum*</label>
+                                    <select class="form-select" name="status" required>
+                                        <option value="Tamamlandı" th:selected="${record.status == 'Tamamlandı'}">Tamamlandı</option>
+                                        <option value="Devam Ediyor" th:selected="${record.status == 'Devam Ediyor'}">Devam Ediyor</option>
+                                        <option value="İptal" th:selected="${record.status == 'İptal'}">İptal</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Kullanılan Parçalar</label>
+                                <input type="text" class="form-control" name="parts" 
+                                       placeholder="Örn: Motor Yağı, Yağ Filtresi"
+                                       th:value="${record.parts}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Notlar</label>
+                                <textarea class="form-control" name="notes" rows="2" 
+                                          placeholder="Varsa ek notlar..." th:text="${record.notes}"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servis Kaydı Silme Modalları -->
+        <div th:each="record : ${serviceRecords}" th:id="'deleteServiceModal' + ${record.id}" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Servis Kaydını Sil
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">Bu servis kaydını silmek istediğinizden emin misiniz?</p>
+                        <div class="alert alert-secondary mt-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-calendar me-2 text-primary"></i>
+                                <strong th:text="${#temporals.format(record.serviceDate, 'dd/MM/yyyy')}">01/01/2024</strong>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-wrench me-2 text-warning"></i>
+                                <span th:text="${record.description}">Yağ Değişimi</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person me-2 text-secondary"></i>
+                                <span th:text="${record.technician}">Mehmet Usta</span>
+                            </div>
+                        </div>
+                        <p class="text-danger small mb-0">
+                            <i class="bi bi-exclamation-circle me-1"></i>
+                            Bu işlem geri alınamaz.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>İptal
+                        </button>
+                        <form th:action="@{/service-records/{id}/delete(id=${record.id})}" 
+                              method="post" class="d-inline">
+                            <input type="hidden" name="vehicleId" th:value="${vehicle.id}">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Sil
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Bakım Kaydı</title>
+</head>
+<body>
+    <section>
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-wrench me-2"></i>Bakım Kaydı
+                </h2>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="@{${maintenance.id != null ? '/maintenance/' + maintenance.id : '/maintenance'}}" 
+                          method="post" 
+                          th:object="${maintenance}">
+                        <input type="hidden" th:field="*{id}">
+                        <input type="hidden" th:field="*{vehicle}">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-gear me-1"></i>Bakım Tipi
+                                    </label>
+                                    <select class="form-select" th:field="*{maintenanceType}" required>
+                                        <option value="">Bakım Tipi Seçin</option>
+                                        <option value="PERIYODIK">Periyodik Bakım</option>
+                                        <option value="MOTOR">Motor Bakımı</option>
+                                        <option value="FREN">Fren Sistemi</option>
+                                        <option value="ELEKTRIK">Elektrik Sistemi</option>
+                                        <option value="MEKANIK">Mekanik Onarım</option>
+                                        <option value="KAPORTA">Kaporta İşlemi</option>
+                                        <option value="LASTIK">Lastik İşlemi</option>
+                                        <option value="DIGER">Diğer</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-speedometer2 me-1"></i>Kilometre
+                                    </label>
+                                    <input type="number" class="form-control" th:field="*{kilometerage}" required>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-person me-1"></i>Teknisyen
+                                    </label>
+                                    <input type="text" class="form-control" th:field="*{technician}" required>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-currency-dollar me-1"></i>Maliyet (TL)
+                                    </label>
+                                    <input type="number" class="form-control" th:field="*{cost}" step="0.01" required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-tools me-1"></i>Kullanılan Parçalar
+                                    </label>
+                                    <textarea class="form-control" th:field="*{partsUsed}" rows="2"></textarea>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-pencil me-1"></i>Açıklama
+                                    </label>
+                                    <textarea class="form-control" th:field="*{description}" rows="3" required></textarea>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-chat-right-text me-1"></i>Öneriler ve Notlar
+                                    </label>
+                                    <textarea class="form-control" th:field="*{recommendations}" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar-check me-1"></i>Sonraki Bakım Kilometresi
+                                    </label>
+                                    <input type="number" class="form-control" th:field="*{nextMaintenanceKm}">
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar me-1"></i>Sonraki Bakım Tarihi
+                                    </label>
+                                    <input type="date" class="form-control" th:field="*{nextMaintenanceDate}">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" th:field="*{isWarrantyWork}" id="isWarrantyWork">
+                                    <label class="form-check-label" for="isWarrantyWork">
+                                        <i class="bi bi-shield-check me-1"></i>Garanti Kapsamında
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group mb-3" id="warrantyEndDateGroup" style="display: none;">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar-x me-1"></i>Garanti Bitiş Tarihi
+                                    </label>
+                                    <input type="date" class="form-control" th:field="*{warrantyEndDate}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>Kaydet
+                            </button>
+                            <a th:href="@{/maintenance/vehicle/{id}(id=${maintenance.vehicle.id})}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>İptal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            document.getElementById('isWarrantyWork').addEventListener('change', function() {
+                const warrantyEndDateGroup = document.getElementById('warrantyEndDateGroup');
+                warrantyEndDateGroup.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // Sayfa yüklendiğinde garanti durumunu kontrol et
+            window.addEventListener('load', function() {
+                const isWarrantyWork = document.getElementById('isWarrantyWork');
+                const warrantyEndDateGroup = document.getElementById('warrantyEndDateGroup');
+                warrantyEndDateGroup.style.display = isWarrantyWork.checked ? 'block' : 'none';
+            });
+        </script>
+    </section>
+</body>
+</html> 

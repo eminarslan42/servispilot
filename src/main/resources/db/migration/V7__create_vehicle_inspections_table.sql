@@ -1,0 +1,20 @@
+CREATE TABLE vehicle_inspections (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    vehicle_id BIGINT NOT NULL,
+    damage_data TEXT,
+    inspection_type VARCHAR(50),
+    inspector VARCHAR(100),
+    notes TEXT,
+    current_kilometer INTEGER,
+    fuel_level VARCHAR(20),
+    has_spare_wheel BOOLEAN,
+    has_jack BOOLEAN,
+    has_first_aid_kit BOOLEAN,
+    has_warning_triangle BOOLEAN,
+    exterior_condition INTEGER,
+    interior_condition INTEGER,
+    mechanical_condition INTEGER,
+    photos TEXT,
+    created_at TIMESTAMP,
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+); 
