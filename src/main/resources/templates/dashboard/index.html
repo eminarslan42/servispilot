@@ -33,8 +33,8 @@
                             <div>
                                 <h6 class="mb-0">Aylık Gelir</h6>
                                 <h2 class="mb-0 mt-2">
-                                    <span th:text="${#numbers.formatDecimal(monthlyIncome, 0, 'COMMA', 0, 'POINT')}">25.000</span>
-                                    <small>TL</small>
+                                    <span th:text="${#numbers.formatDecimal(monthlyIncome, 0, 'POINT', 0, 'COMMA')}">25.000</span>
+                                    <small>₺</small>
                                 </h2>
                                 <div class="small mt-2">
                                     <i class="bi bi-arrow-up-short"></i>
@@ -42,7 +42,7 @@
                                 </div>
                             </div>
                             <div class="dashboard-icon">
-                                <i class="bi bi-currency-dollar display-4"></i>
+                                <i class="bi bi-cash display-4"></i>
                             </div>
                         </div>
                     </div>
@@ -136,8 +136,8 @@
                                     <div class="text-end">
                                         <div class="fw-bold" th:text="${vehicle.serviceCount + ' Servis'}">12 Servis</div>
                                         <small class="text-muted" 
-                                               th:text="${#numbers.formatDecimal(vehicle.totalSpent, 0, 'COMMA', 0, 'POINT') + ' TL'}">
-                                            15.000 TL
+                                               th:text="${#numbers.formatDecimal(vehicle.totalSpent, 0, 'POINT', 0, 'COMMA') + ' ₺'}">
+                                            15.000 ₺
                                         </small>
                                     </div>
                                 </div>
@@ -209,7 +209,6 @@
 
         <!-- Chart.js ve Custom Dashboard JS -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="/js/auth.js"></script>
         <script th:inline="javascript">
             // Gelir Grafiği
             const incomeCtx = document.getElementById('incomeChart').getContext('2d');
@@ -221,7 +220,7 @@
                 data: {
                     labels: incomeLabels,
                     datasets: [{
-                        label: 'Aylık Gelir (TL)',
+                        label: 'Aylık Gelir (₺)',
                         data: incomeData,
                         borderColor: '#3498db',
                         backgroundColor: 'rgba(52, 152, 219, 0.1)',
@@ -242,7 +241,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return value.toLocaleString('tr-TR') + ' TL';
+                                    return value.toLocaleString('tr-TR') + ' ₺';
                                 }
                             }
                         }
@@ -255,31 +254,49 @@
             const servicesData = /*[[${popularServicesData}]]*/ [];
             const servicesLabels = /*[[${popularServicesLabels}]]*/ [];
 
-            new Chart(servicesCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: servicesLabels,
-                    datasets: [{
-                        data: servicesData,
-                        backgroundColor: [
-                            '#3498db',
-                            '#2ecc71',
-                            '#f1c40f',
-                            '#e74c3c',
-                            '#9b59b6'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right'
+            if (servicesData.length > 0 && servicesLabels.length > 0) {
+                new Chart(servicesCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: servicesLabels,
+                        datasets: [{
+                            data: servicesData,
+                            backgroundColor: [
+                                '#3498db',
+                                '#2ecc71',
+                                '#f1c40f',
+                                '#e74c3c',
+                                '#9b59b6'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw} kez`;
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-            });
+                });
+            } else {
+                document.getElementById('servicesChart').parentElement.innerHTML = 
+                    '<div class="text-center p-4"><p class="text-muted">Henüz servis kaydı bulunmamaktadır.</p></div>';
+            }
         </script>
 
         <style>

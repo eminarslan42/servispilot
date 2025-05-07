@@ -16,6 +16,7 @@ import com.vehicle.car.model.User;
 import com.vehicle.car.repository.UserRepository;
 import com.vehicle.car.security.services.UserDetailsImpl;
 import com.vehicle.car.service.SubscriptionService;
+import com.vehicle.car.service.UserService;
 
 @Controller
 @RequestMapping("/profile")
@@ -23,6 +24,9 @@ public class ProfileController {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private UserService userService;
     
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -71,8 +75,8 @@ public class ProfileController {
         user.setLastName(updatedUser.getLastName());
         user.setPhone(updatedUser.getPhone());
         
-        // Kullanıcıyı kaydet
-        userRepository.save(user);
+        // Kullanıcıyı kaydet - kasa hesabının korunması için userService kullanılıyor
+        userService.saveUser(user);
         
         redirectAttributes.addFlashAttribute("successMessage", "Profil bilgileriniz başarıyla güncellendi.");
         
@@ -104,7 +108,8 @@ public class ProfileController {
         
         // Şifreyi güncelle
         user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+        // Kullanıcıyı kaydet - kasa hesabının korunması için userService kullanılıyor
+        userService.saveUser(user);
         
         redirectAttributes.addFlashAttribute("passwordSuccess", "Şifreniz başarıyla güncellendi.");
         

@@ -9,11 +9,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import com.vehicle.car.model.ServiceRecord;
 import org.springframework.transaction.annotation.Transactional;
 import com.vehicle.car.repository.ServiceReminderRepository;
 import com.vehicle.car.repository.ServiceRecordRepository;
 import com.vehicle.car.repository.VehicleInspectionRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +29,16 @@ public class VehicleService {
         return vehicleRepository.findAll();
     }
 
+    public Page<Vehicle> getAllVehiclesPaginated(Pageable pageable) {
+        return vehicleRepository.findAll(pageable);
+    }
+
     public List<Vehicle> getVehiclesByUserId(Long userId) {
         return vehicleRepository.findByUserId(userId);
+    }
+
+    public Page<Vehicle> getVehiclesByUserIdPaginated(Long userId, Pageable pageable) {
+        return vehicleRepository.findByUserId(userId, pageable);
     }
 
     public Optional<Vehicle> getVehicleById(Long id) {
@@ -44,6 +53,14 @@ public class VehicleService {
             searchTerm.trim(), searchTerm.trim());
     }
 
+    public Page<Vehicle> searchVehiclesPaginated(String searchTerm, Pageable pageable) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getAllVehiclesPaginated(pageable);
+        }
+        return vehicleRepository.findByPlateContainingIgnoreCaseOrOwnerNameContainingIgnoreCase(
+            searchTerm.trim(), searchTerm.trim(), pageable);
+    }
+
     public List<Vehicle> searchVehiclesByUser(String searchTerm, Long userId) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             return getVehiclesByUserId(userId);
@@ -55,11 +72,56 @@ public class VehicleService {
             .collect(Collectors.toList());
     }
 
+    public Page<Vehicle> searchVehiclesByUserPaginated(String searchTerm, Long userId, Pageable pageable) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getVehiclesByUserIdPaginated(userId, pageable);
+        }
+        return vehicleRepository.findByUserIdAndPlateContainingIgnoreCaseOrUserIdAndOwnerNameContainingIgnoreCase(
+            userId, searchTerm.trim(), userId, searchTerm.trim(), pageable);
+    }
+
+    public boolean isPlateExists(String plate) {
+        return !vehicleRepository.findByPlateContainingIgnoreCase(plate).isEmpty();
+    }
+
+    /**
+     * Belirli bir plakaya sahip başka araç olup olmadığını kontrol eder, 
+     * verilen ID'ye sahip aracı hariç tutar
+     */
+    public boolean isPlateExistsExcludingVehicle(String plate, Long vehicleId) {
+        List<Vehicle> vehicles = vehicleRepository.findByPlateContainingIgnoreCase(plate);
+        return vehicles.stream()
+                .anyMatch(v -> !v.getId().equals(vehicleId));
+    }
+
     public Vehicle saveVehicle(Vehicle vehicle) {
+        // Yeni araç kaydı (ID yoksa)
+        if (vehicle.getId() == null) {
+            if (isPlateExists(vehicle.getPlate())) {
+                throw new IllegalStateException("Bu plakaya sahip bir araç zaten kayıtlıdır");
+            }
+        } else {
+            // Güncelleme işlemi - aynı plakaya sahip farklı bir araç var mı kontrol et
+            if (isPlateExistsExcludingVehicle(vehicle.getPlate(), vehicle.getId())) {
+                throw new IllegalStateException("Bu plakaya sahip başka bir araç zaten kayıtlıdır");
+            }
+        }
         return vehicleRepository.save(vehicle);
     }
 
     public Vehicle saveVehicleForUser(Vehicle vehicle, Long userId) {
+        // Yeni araç kaydı (ID yoksa)
+        if (vehicle.getId() == null) {
+            if (isPlateExists(vehicle.getPlate())) {
+                throw new IllegalStateException("Bu plakaya sahip bir araç zaten kayıtlıdır");
+            }
+        } else {
+            // Güncelleme işlemi - aynı plakaya sahip farklı bir araç var mı kontrol et
+            if (isPlateExistsExcludingVehicle(vehicle.getPlate(), vehicle.getId())) {
+                throw new IllegalStateException("Bu plakaya sahip başka bir araç zaten kayıtlıdır");
+            }
+        }
+        
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalStateException("Kullanıcı bulunamadı"));
         vehicle.setUser(user);

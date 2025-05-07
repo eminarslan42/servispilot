@@ -1,5 +1,8 @@
 package com.vehicle.car.controller;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,7 +33,17 @@ public class ViewController {
     }
 
     @GetMapping("/register")
-    public String register() {
+    public String register(Model model) {
+        // Kullanıcının admin olup olmadığını kontrol et
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = false;
+        
+        if (authentication != null && authentication.isAuthenticated() && 
+            !"anonymousUser".equals(authentication.getPrincipal())) {
+            isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+        
+        model.addAttribute("isAdmin", isAdmin);
         return "auth/register";
     }
 } 

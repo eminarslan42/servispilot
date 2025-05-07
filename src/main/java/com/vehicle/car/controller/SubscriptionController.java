@@ -37,11 +37,14 @@ public class SubscriptionController {
     }
 
     @PostMapping("/{userId}/extend")
-    public String extendSubscription(@PathVariable Long userId, RedirectAttributes redirectAttributes) {
+    public String extendSubscription(
+            @PathVariable Long userId, 
+            @RequestParam(defaultValue = "1") Integer duration,
+            RedirectAttributes redirectAttributes) {
         try {
-            logger.info("Extending subscription for user ID: {}", userId);
-            subscriptionService.extendSubscription(userId);
-            redirectAttributes.addFlashAttribute("success", "Abonelik başarıyla uzatıldı.");
+            logger.info("Extending subscription for user ID: {} for {} months", userId, duration);
+            subscriptionService.extendSubscription(userId, duration);
+            redirectAttributes.addFlashAttribute("success", duration + " aylık abonelik başarıyla uzatıldı.");
         } catch (Exception e) {
             logger.error("Error extending subscription for user ID: {}", userId, e);
             redirectAttributes.addFlashAttribute("error", "Abonelik uzatılırken bir hata oluştu: " + e.getMessage());
@@ -50,11 +53,14 @@ public class SubscriptionController {
     }
 
     @PostMapping("/{userId}/renew")
-    public String renewSubscription(@PathVariable Long userId, RedirectAttributes redirectAttributes) {
+    public String renewSubscription(
+            @PathVariable Long userId, 
+            @RequestParam(defaultValue = "1") Integer duration,
+            RedirectAttributes redirectAttributes) {
         try {
-            logger.info("Renewing subscription for user ID: {}", userId);
-            subscriptionService.renewSubscription(userId);
-            redirectAttributes.addFlashAttribute("success", "Abonelik başarıyla yenilendi.");
+            logger.info("Renewing subscription for user ID: {} for {} months", userId, duration);
+            subscriptionService.renewSubscription(userId, duration);
+            redirectAttributes.addFlashAttribute("success", duration + " aylık abonelik başarıyla yenilendi.");
         } catch (Exception e) {
             logger.error("Error renewing subscription for user ID: {}", userId, e);
             redirectAttributes.addFlashAttribute("error", "Abonelik yenilenirken bir hata oluştu: " + e.getMessage());

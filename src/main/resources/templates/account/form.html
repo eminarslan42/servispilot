@@ -16,6 +16,12 @@
             </a>
         </div>
 
+        <!-- Kasa hesabı uyarısı -->
+        <div class="alert alert-warning" th:if="${kasaWarning != null}">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span th:text="${kasaWarning}">Dikkat: Bu özel bir Kasa hesabıdır. Hesap adını değiştirmemeniz önerilir.</span>
+        </div>
+
         <div class="row">
             <div class="col-lg-8">
                 <div class="card">
@@ -38,8 +44,12 @@
                                     </label>
                                     <input type="text" class="form-control" id="name" 
                                            th:field="*{name}" required
-                                           placeholder="Hesap adını girin">
+                                           placeholder="Hesap adını girin"
+                                           th:classappend="${kasaWarning != null ? 'border-warning' : ''}">
                                     <div class="invalid-feedback">Lütfen hesap adını girin.</div>
+                                    <small class="text-warning" th:if="${kasaWarning != null}">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Kasa hesabının adını değiştirmek tavsiye edilmez!
+                                    </small>
                                 </div>
 
                                 <!-- İletişim Bilgileri -->

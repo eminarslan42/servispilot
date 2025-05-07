@@ -37,23 +37,64 @@ public class SubscriptionService {
 
     @Transactional
     public Subscription renewSubscription(Long userId) {
+        return renewSubscription(userId, 1); // Eski metot 1 aylık yenileme yapar
+    }
+    
+    @Transactional
+    public Subscription renewSubscription(Long userId, Integer months) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         Subscription subscription = user.getSubscription();
         if (subscription == null) {
-            return createSubscription(user);
+            Subscription newSubscription = createSubscription(user);
+            if (months > 1) {
+                // Başlangıçta 1 ay verildiği için kalan ayları ekliyoruz
+                newSubscription.setEndDate(newSubscription.getEndDate().plusMonths(months - 1));
+            }
+            return subscriptionRepository.save(newSubscription);
         }
         
-        subscription.setEndDate(subscription.getEndDate().plusMonths(1));
+        LocalDateTime now = LocalDateTime.now();
+        subscription.setLastPaymentDate(now);
+        subscription.setStartDate(now); // Yenilemede başlangıç tarihi şimdiki zaman olur
+        subscription.setEndDate(now.plusMonths(months));
         subscription.setIsActive(true);
-        subscription.setLastPaymentDate(LocalDateTime.now());
         return subscriptionRepository.save(subscription);
     }
 
     @Transactional
     public Subscription extendSubscription(Long userId) {
-        return renewSubscription(userId); // Extend works the same as renew
+        return extendSubscription(userId, 1); // Eski metot 1 aylık uzatma yapar
+    }
+    
+    @Transactional
+    public Subscription extendSubscription(Long userId, Integer months) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Subscription subscription = user.getSubscription();
+        if (subscription == null) {
+            Subscription newSubscription = createSubscription(user);
+            if (months > 1) {
+                // Başlangıçta 1 ay verildiği için kalan ayları ekliyoruz
+                newSubscription.setEndDate(newSubscription.getEndDate().plusMonths(months - 1));
+            }
+            return subscriptionRepository.save(newSubscription);
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        subscription.setLastPaymentDate(now);
+        
+        // Mevcut bitiş tarihinden itibaren veya şu andan itibaren uzatma yapılır
+        LocalDateTime endDate = subscription.getEndDate();
+        if (endDate.isBefore(now)) {
+            endDate = now;
+        }
+        
+        subscription.setEndDate(endDate.plusMonths(months));
+        subscription.setIsActive(true);
+        return subscriptionRepository.save(subscription);
     }
 
     @Transactional

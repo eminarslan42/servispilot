@@ -15,10 +15,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
+import org.springframework.http.HttpMethod;
 
 import com.vehicle.car.security.jwt.AuthEntryPointJwt;
 import com.vehicle.car.security.jwt.AuthTokenFilter;
 import com.vehicle.car.security.services.UserDetailsServiceImpl;
+import com.vehicle.car.security.jwt.JwtUtils;
 
 @Configuration
 @EnableMethodSecurity
@@ -81,15 +83,24 @@ public class WebSecurityConfig {
                     .authenticationEntryPoint(unauthorizedHandler)
                     .accessDeniedHandler(accessDeniedHandler())
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
             .authorizeHttpRequests(auth -> 
                 auth
                     .requestMatchers("/", "/error", "/home").permitAll()
-                    .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/login", "/register", "/auth/**").permitAll()
+                    .requestMatchers("/api/auth/signin", "/api/auth/signup").permitAll()
+                    .requestMatchers("/api/auth/reset-password").hasRole("ADMIN")
+                    .requestMatchers("/api/auth/**").authenticated()
+                    .requestMatchers("/login").permitAll()
+                    .requestMatchers("/register").hasRole("ADMIN")
+                    .requestMatchers("/auth/**").permitAll()
                     .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/assets/**").permitAll()
+                    .requestMatchers("/uploads/**").permitAll()
+                    .requestMatchers("/files/**").permitAll()
                     .requestMatchers("/templates/**").permitAll()
                     .requestMatchers("/error/**").permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             )
@@ -101,10 +112,10 @@ public class WebSecurityConfig {
             )
             .logout(logout -> logout
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login?logout=true")
+                .logoutSuccessUrl("/login")
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
-                .deleteCookies("JSESSIONID")
+                .deleteCookies("JSESSIONID", "remember-me", JwtUtils.JWT_COOKIE_NAME, "servispilot_refresh")
                 .permitAll()
             );
         

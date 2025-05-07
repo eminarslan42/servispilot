@@ -82,6 +82,10 @@ public class TransactionService {
         }
         
         accountRepository.save(account);
+        
+        // Update cash account
+        updateCashAccount(transaction);
+        
         return transactionRepository.save(transaction);
     }
     
@@ -101,6 +105,10 @@ public class TransactionService {
         }
         
         accountRepository.save(account);
+        
+        // Update cash account
+        updateCashAccount(transaction);
+        
         return transactionRepository.save(transaction);
     }
 
@@ -118,7 +126,178 @@ public class TransactionService {
             }
             
             accountRepository.save(account);
+            
+            // Reverse cash account update
+            reverseCashAccountUpdate(transaction.get());
+            
             transactionRepository.deleteById(id);
         }
+    }
+    
+    // Helper method to update cash account
+    private void updateCashAccount(Transaction transaction) {
+        // Get the user from the transaction
+        User user = transaction.getUser();
+        if (user == null) {
+            // If transaction doesn't have a user, try to get it from the account
+            if (transaction.getAccount() != null && transaction.getAccount().getUser() != null) {
+                user = transaction.getAccount().getUser();
+            } else {
+                // If no user found, we can't update a specific cash account
+                return;
+            }
+        }
+        
+        // Find the user's cash account (Kasa)
+        List<Account> userCashAccounts = accountRepository.findByNameContainingIgnoreCaseAndUserId("Kasa", user.getId());
+        if (userCashAccounts.isEmpty()) {
+            // Create cash account for this user if it doesn't exist
+            Account cashAccount = new Account();
+            cashAccount.setName("Kasa");
+            cashAccount.setBalance(BigDecimal.ZERO);
+            cashAccount.setUser(user);
+            cashAccount = accountRepository.save(cashAccount);
+            userCashAccounts = List.of(cashAccount);
+        }
+        
+        Account cashAccount = userCashAccounts.get(0);
+        
+        // ÖNEMLİ: Eğer işlem zaten kasa hesabına yapılıyorsa, tekrar kasa hesabını güncelleme (çift sayımı önle)
+        if (transaction.getAccount() != null && 
+            transaction.getAccount().getId() != null && 
+            transaction.getAccount().getId().equals(cashAccount.getId())) {
+            return;
+        }
+        
+        // Düzeltilmiş mantık: 
+        // CREDIT (Alacak): Para alındı, kasa artar (+)
+        // DEBIT (Borç): Para verildi, kasa azalır (-)
+        if (transaction.getType() == TransactionType.CREDIT) {
+            // Müşteriden para alındı - kasa artar
+            cashAccount.setBalance(cashAccount.getBalance().add(transaction.getAmount()));
+        } else {
+            // Müşteriye para verildi - kasa azalır
+            cashAccount.setBalance(cashAccount.getBalance().subtract(transaction.getAmount()));
+        }
+        
+        accountRepository.save(cashAccount);
+    }
+    
+    // Helper method to reverse cash account update when a transaction is deleted
+    private void reverseCashAccountUpdate(Transaction transaction) {
+        // Get the user from the transaction
+        User user = transaction.getUser();
+        if (user == null) {
+            // If transaction doesn't have a user, try to get it from the account
+            if (transaction.getAccount() != null && transaction.getAccount().getUser() != null) {
+                user = transaction.getAccount().getUser();
+            } else {
+                // If no user found, we can't update a specific cash account
+                return;
+            }
+        }
+        
+        // Find the user's cash account (Kasa)
+        List<Account> userCashAccounts = accountRepository.findByNameContainingIgnoreCaseAndUserId("Kasa", user.getId());
+        if (!userCashAccounts.isEmpty()) {
+            Account cashAccount = userCashAccounts.get(0);
+            
+            // ÖNEMLİ: Eğer işlem zaten kasa hesabına yapılıyorsa, tekrar kasa hesabını güncelleme (çift sayımı önle)
+            if (transaction.getAccount() != null && 
+                transaction.getAccount().getId() != null && 
+                transaction.getAccount().getId().equals(cashAccount.getId())) {
+                return;
+            }
+            
+            // Düzeltilmiş mantığın tersine çevrilmesi:
+            if (transaction.getType() == TransactionType.CREDIT) {
+                // Tersine çevir: Müşteriden para alındı - kasa azalır
+                cashAccount.setBalance(cashAccount.getBalance().subtract(transaction.getAmount()));
+            } else {
+                // Tersine çevir: Müşteriye para verildi - kasa artar
+                cashAccount.setBalance(cashAccount.getBalance().add(transaction.getAmount()));
+            }
+            
+            accountRepository.save(cashAccount);
+        }
+    }
+
+    /**
+     * Hesap bakiyesini mevcut işlemlerine göre yeniden hesaplar.
+     * Bu metot, hesap bakiyesindeki tutarsızlıkları düzeltmek için kullanılabilir.
+     * 
+     * @param accountId Bakiyesi düzeltilecek hesabın ID'si
+     * @return Güncellenen hesap
+     */
+    @Transactional
+    public Account recalculateAccountBalance(Long accountId) {
+        Optional<Account> accountOpt = accountRepository.findById(accountId);
+        if (!accountOpt.isPresent()) {
+            throw new IllegalStateException("Hesap bulunamadı: " + accountId);
+        }
+        
+        Account account = accountOpt.get();
+        
+        // İşlemleri al
+        List<Transaction> transactions = transactionRepository.findByAccountIdOrderByTransactionDateDesc(accountId);
+        
+        // Bakiyeyi sıfırla
+        account.setBalance(BigDecimal.ZERO);
+        
+        // Tüm işlemleri hesapla
+        for (Transaction transaction : transactions) {
+            if (transaction.getType() == TransactionType.CREDIT) {
+                account.setBalance(account.getBalance().add(transaction.getAmount()));
+            } else {
+                account.setBalance(account.getBalance().subtract(transaction.getAmount()));
+            }
+        }
+        
+        // Hesabı kaydet
+        return accountRepository.save(account);
+    }
+    
+    /**
+     * Kasa hesabının bakiyesini mevcut işlemlerine göre yeniden hesaplar.
+     * 
+     * @param userId Kullanıcı ID'si
+     * @return Güncellenen kasa hesabı
+     */
+    @Transactional
+    public Account recalculateCashAccountBalance(Long userId) {
+        // Kullanıcının kasa hesabını bul
+        List<Account> userCashAccounts = accountRepository.findByNameContainingIgnoreCaseAndUserId("Kasa", userId);
+        if (userCashAccounts.isEmpty()) {
+            throw new IllegalStateException("Kasa hesabı bulunamadı. Kullanıcı ID: " + userId);
+        }
+        
+        Account cashAccount = userCashAccounts.get(0);
+        
+        // Kullanıcının tüm işlemlerini al
+        List<Transaction> allTransactions = transactionRepository.findByUserIdOrderByTransactionDateDesc(userId);
+        
+        // Kasa bakiyesini sıfırla
+        cashAccount.setBalance(BigDecimal.ZERO);
+        
+        for (Transaction transaction : allTransactions) {
+            // Kasa hesabının kendi işlemlerini atla - zaten account hesaplamasında dikkate alındı
+            if (transaction.getAccount() != null && 
+                transaction.getAccount().getId() != null && 
+                transaction.getAccount().getId().equals(cashAccount.getId())) {
+                continue;
+            }
+            
+            // İşlem tipine göre kasa bakiyesini güncelle
+            if (transaction.getType() == TransactionType.CREDIT) {
+                // Alacak - kasaya para girişi
+                cashAccount.setBalance(cashAccount.getBalance().add(transaction.getAmount()));
+            } else {
+                // Borç - kasadan para çıkışı
+                cashAccount.setBalance(cashAccount.getBalance().subtract(transaction.getAmount()));
+            }
+        }
+        
+        // Kasa hesabını kaydet
+        return accountRepository.save(cashAccount);
     }
 } 

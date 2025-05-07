@@ -1,0 +1,31 @@
+runtime: java17
+instance_class: F2
+
+env_variables:
+  SPRING_PROFILES_ACTIVE: prod
+  SPRING_DATASOURCE_URL: jdbc:postgresql://google/servispilot?socketFactory=com.google.cloud.sql.postgres.SocketFactory&cloudSqlInstance=servispilot-453406:europe-west3:servispilot-db
+  SPRING_DATASOURCE_USERNAME: postgres
+  SPRING_DATASOURCE_PASSWORD: Avdul001!?
+  SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+  
+  # JWT ve Oturum yapılandırması
+  JWT_EXPIRATIONMS: 1209600000
+  JWT_REFRESHEXPIRATIONMS: 2592000000
+  
+  # Cookie yapılandırması
+  COOKIE_SECURE: false
+  COOKIE_HTTPONLY: true
+  COOKIE_SAMESITE: "Lax"
+
+handlers:
+- url: /.*
+  script: auto
+
+automatic_scaling:
+  target_cpu_utilization: 0.8
+  min_instances: 1
+  max_instances: 2
+  min_idle_instances: 1
+  max_concurrent_requests: 40
+  target_throughput_utilization: 0.8 

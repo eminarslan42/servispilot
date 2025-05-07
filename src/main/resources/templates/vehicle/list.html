@@ -12,9 +12,23 @@
             <h2 class="mb-0">
                 <i class="bi bi-car-front me-2"></i>Araç Listesi
             </h2>
-            <a href="/vehicles/new" class="btn btn-success">
-                <i class="bi bi-plus-circle me-2"></i>Yeni Araç Ekle
-            </a>
+            <div class="d-flex">
+                <form action="/vehicles/search" method="get" class="d-flex me-2">
+                    <input type="hidden" name="page" value="0">
+                    <input type="hidden" name="size" th:value="${pageSize}">
+                    <input type="hidden" name="sort" th:value="${sortField}">
+                    <div class="input-group">
+                        <input type="text" name="query" class="form-control" placeholder="Plaka veya isim ara..." 
+                               th:value="${searchQuery}" aria-label="Arama">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+                <a href="/vehicles/new" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> YENİ ARAÇ EKLE
+                </a>
+            </div>
         </div>
         
         <div class="row">
@@ -24,25 +38,75 @@
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead>
-                                    <tr>
-                                        <th>Plaka</th>
-                                        <th>Araç Bilgisi</th>
-                                        <th>Araç Sahibi</th>
-                                        <th>İletişim</th>
-                                        <th>Son Servis</th>
-                                        <th>İşlemler</th>
+                                    <tr class="bg-dark text-white">
+                                        <th>
+                                            <a th:href="${searchQuery != null} ? 
+                                                   @{/vehicles/search(query=${searchQuery}, page=${currentPage}, size=${pageSize}, sort='plate')} : 
+                                                   @{/vehicles(page=${currentPage}, size=${pageSize}, sort='plate')}"
+                                               class="text-decoration-none text-white">
+                                                PLAKA
+                                            </a>
+                                        </th>
+                                        <th>
+                                            <a th:href="${searchQuery != null} ? 
+                                                   @{/vehicles/search(query=${searchQuery}, page=${currentPage}, size=${pageSize}, sort='brand')} : 
+                                                   @{/vehicles(page=${currentPage}, size=${pageSize}, sort='brand')}"
+                                               class="text-decoration-none text-white">
+                                                ARAÇ BİLGİSİ
+                                            </a>
+                                        </th>
+                                        <th>
+                                            <a th:href="${searchQuery != null} ? 
+                                                   @{/vehicles/search(query=${searchQuery}, page=${currentPage}, size=${pageSize}, sort='ownerName')} : 
+                                                   @{/vehicles(page=${currentPage}, size=${pageSize}, sort='ownerName')}"
+                                               class="text-decoration-none text-white">
+                                                ARAÇ SAHİBİ
+                                            </a>
+                                        </th>
+                                        <th>
+                                            <a th:href="${searchQuery != null} ? 
+                                                   @{/vehicles/search(query=${searchQuery}, page=${currentPage}, size=${pageSize}, sort='ownerPhone')} : 
+                                                   @{/vehicles(page=${currentPage}, size=${pageSize}, sort='ownerPhone')}"
+                                               class="text-decoration-none text-white">
+                                                İLETİŞİM
+                                            </a>
+                                        </th>
+                                        <th>
+                                            <a th:href="${searchQuery != null} ? 
+                                                   @{/vehicles/search(query=${searchQuery}, page=${currentPage}, size=${pageSize}, sort='createdAt')} : 
+                                                   @{/vehicles(page=${currentPage}, size=${pageSize}, sort='createdAt')}"
+                                               class="text-decoration-none text-white">
+                                                EKLENME TARİHİ
+                                            </a>
+                                        </th>
+                                        <th>
+                                            <a th:href="${searchQuery != null} ? 
+                                                   @{/vehicles/search(query=${searchQuery}, page=${currentPage}, size=${pageSize}, sort='id')} : 
+                                                   @{/vehicles(page=${currentPage}, size=${pageSize}, sort='id')}"
+                                               class="text-decoration-none text-white">
+                                                SON SERVİS
+                                            </a>
+                                        </th>
+                                        <th>
+                                            <a th:href="${searchQuery != null} ? 
+                                                   @{/vehicles/search(query=${searchQuery}, page=${currentPage}, size=${pageSize}, sort='id')} : 
+                                                   @{/vehicles(page=${currentPage}, size=${pageSize}, sort='id')}"
+                                               class="text-decoration-none text-white">
+                                                İŞLEMLER
+                                            </a>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="vehicle : ${vehicles}" class="align-middle animate__animated animate__fadeIn">
+                                    <tr th:each="vehicle : ${vehicles}" class="align-middle vehicle-row">
                                         <td>
                                             <span class="badge bg-primary" th:text="${vehicle.plate}">34ABC123</span>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <i class="bi bi-car-front-fill me-2 text-primary"></i>
+                                                <i class="bi bi-car-front me-2 text-primary"></i>
                                                 <div>
-                                                    <div class="fw-bold" th:text="${vehicle.brand + ' ' + vehicle.model}">Toyota Corolla</div>
+                                                    <div class="fw-bold" th:text="${vehicle.brand + ' ' + vehicle.model}">Audi Q2</div>
                                                     <small class="text-muted" th:text="${vehicle.year}">2020</small>
                                                 </div>
                                             </div>
@@ -50,23 +114,34 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <i class="bi bi-person-circle me-2 text-secondary"></i>
-                                                <span th:text="${vehicle.ownerName}">Ahmet Yılmaz</span>
+                                                <span th:text="${vehicle.ownerName}">AHMET YILMAZ</span>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <i class="bi bi-telephone-fill me-2 text-success"></i>
-                                                <span th:text="${vehicle.ownerPhone}">0555-555-5555</span>
+                                                <span th:text="${vehicle.ownerPhone}">05555555555</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <div th:if="${not #lists.isEmpty(vehicle.serviceRecords)}" 
-                                                 th:with="lastService=${vehicle.serviceRecords[0]}">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-calendar me-2 text-info"></i>
+                                                <span th:text="${#temporals.format(vehicle.createdAt, 'dd/MM/yyyy')}">01/01/2023</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div th:if="${not #lists.isEmpty(vehicle.serviceRecords)}">
                                                 <div class="d-flex align-items-center">
                                                     <i class="bi bi-wrench me-2 text-warning"></i>
                                                     <div>
-                                                        <div th:text="${#temporals.format(lastService.serviceDate, 'dd/MM/yyyy')}">01/01/2024</div>
-                                                        <small class="text-muted" th:text="${lastService.description}">Yağ Değişimi</small>
+                                                        <div th:if="${vehicle.serviceRecords[0] != null && vehicle.serviceRecords[0].serviceDate != null}" 
+                                                             th:text="${#temporals.format(vehicle.serviceRecords[0].serviceDate, 'dd/MM/yyyy')}">
+                                                            01/01/2024
+                                                        </div>
+                                                        <small class="text-muted" th:if="${vehicle.serviceRecords[0] != null && vehicle.serviceRecords[0].description != null}"
+                                                               th:text="${vehicle.serviceRecords[0].description}">
+                                                            Yağ Değişimi
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -75,27 +150,23 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <div class="btn-group">
-                                                <a th:href="@{/vehicles/{id}(id=${vehicle.id})}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Detaylı Görüntüle">
-                                                    <i class="bi bi-eye me-1"></i>
+                                            <div class="d-flex">
+                                                <a th:href="@{/vehicles/{id}(id=${vehicle.id})}" class="btn btn-sm btn-primary me-1" title="Görüntüle" data-bs-toggle="tooltip">
+                                                    <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a th:href="@{/diagnoses/new(vehicleId=${vehicle.id})}" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Arıza Teşhisi Ekle">
-                                                    <i class="bi bi-tools"></i>
-                                                </a>
-                                                <a th:href="@{/reminders/new(vehicleId=${vehicle.id})}" class="btn btn-sm" style="background-color: #fd7e14; color: white;" data-bs-toggle="tooltip" title="Hatırlatıcı Ekle">
-                                                    <i class="bi bi-bell"></i>
-                                                </a>
-                                                
+                                                <button class="btn btn-sm btn-warning me-1" title="Düzenle" 
+                                                        th:data-bs-target="'#editVehicleModal' + ${vehicle.id}" data-bs-toggle="modal">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
                                                 <button class="btn btn-sm btn-danger" data-bs-toggle="modal" 
-                                                        th:data-bs-target="'#deleteModal' + ${vehicle.id}"
-                                                        title="Aracı Sil">
+                                                        th:data-bs-target="'#deleteModal' + ${vehicle.id}" title="Sil">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(vehicles)}">
-                                        <td colspan="6" class="text-center py-5">
+                                        <td colspan="7" class="text-center py-5">
                                             <div class="text-muted">
                                                 <i class="bi bi-inbox-fill display-1"></i>
                                                 <p class="mt-3">Kayıtlı araç bulunamadı.</p>
@@ -113,6 +184,52 @@
             </div>
         </div>
 
+        <!-- Pagination Controls -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Araç Listesi Sayfaları">
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous Page -->
+                        <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                            <a class="page-link" 
+                               th:href="${searchQuery != null} ? @{/vehicles/search(query=${searchQuery}, page=${currentPage - 1}, size=${pageSize}, sort=${sortField})} : @{/vehicles(page=${currentPage - 1}, size=${pageSize}, sort=${sortField})}" 
+                               aria-label="Önceki">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        
+                        <!-- Page Numbers -->
+                        <li class="page-item" th:each="i: ${#numbers.sequence(0, totalPages - 1)}" 
+                            th:if="${i >= currentPage - 2 and i <= currentPage + 2}"
+                            th:classappend="${i == currentPage ? 'active' : ''}">
+                            <a class="page-link" 
+                               th:href="${searchQuery != null} ? @{/vehicles/search(query=${searchQuery}, page=${i}, size=${pageSize}, sort=${sortField})} : @{/vehicles(page=${i}, size=${pageSize}, sort=${sortField})}" 
+                               th:text="${i + 1}">1</a>
+                        </li>
+                        
+                        <!-- Next Page -->
+                        <li class="page-item" th:classappend="${currentPage + 1 >= totalPages ? 'disabled' : ''}">
+                            <a class="page-link" 
+                               th:href="${searchQuery != null} ? @{/vehicles/search(query=${searchQuery}, page=${currentPage + 1}, size=${pageSize}, sort=${sortField})} : @{/vehicles(page=${currentPage + 1}, size=${pageSize}, sort=${sortField})}" 
+                               aria-label="Sonraki">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                
+                <!-- Page info -->
+                <div class="text-center text-muted small mt-2" th:if="${totalItems > 0}">
+                    Toplam <span th:text="${totalItems}">100</span> kayıt içinden 
+                    <span th:text="${currentPage * pageSize + 1}">1</span> - 
+                    <span th:text="${(currentPage * pageSize) + vehicles.size()}">10</span> arası gösteriliyor
+                </div>
+                <div class="text-center text-muted small mt-2" th:if="${totalItems == 0}">
+                    Kayıt bulunamadı
+                </div>
+            </div>
+        </div>
+        
         <!-- Quick Service Modals -->
         <div th:each="vehicle : ${vehicles}" th:id="'quickServiceModal' + ${vehicle.id}" class="modal fade">
             <div class="modal-dialog">
@@ -179,24 +296,327 @@
             </div>
         </div>
 
-        <script>
-            // URL'den hata mesajını kontrol et ve göster
-            window.onload = function() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const error = urlParams.get('error');
-                if (error) {
-                    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-                    document.getElementById('errorMessage').textContent = decodeURIComponent(error);
-                    errorModal.show();
-                }
+        <!-- Edit Vehicle Modals -->
+        <div th:each="vehicle : ${vehicles}" th:id="'editVehicleModal' + ${vehicle.id}" class="modal fade" tabindex="-1" aria-labelledby="editVehicleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="editVehicleModalLabel">Araç Düzenle - <span th:text="${vehicle.plate}"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Alerts for form submission feedback -->
+                        <div th:id="'successAlert' + ${vehicle.id}" class="alert alert-success d-none" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>Araç başarıyla güncellendi!
+                        </div>
+                        <div th:id="'errorAlert' + ${vehicle.id}" class="alert alert-danger d-none" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i><span class="error-message">Bir hata oluştu</span>
+                        </div>
+                        
+                        <form th:id="'vehicleEditForm' + ${vehicle.id}" 
+                              th:action="@{/vehicles/{id}/edit(id=${vehicle.id})}"
+                              method="post"
+                              class="needs-validation" novalidate>
+                            
+                            <input type="hidden" name="id" th:value="${vehicle.id}" />
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="licensePlate" class="form-label">Plaka</label>
+                                    <input type="text" class="form-control" id="licensePlate" name="plate" th:value="${vehicle.plate}" required>
+                                    <div class="invalid-feedback">Plaka gereklidir</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="year" class="form-label">Yıl</label>
+                                    <input type="number" class="form-control" id="year" name="year" th:value="${vehicle.year}" min="1900" max="2099" required>
+                                    <div class="invalid-feedback">Geçerli bir yıl girin</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <label for="brandSelect" class="form-label">Marka</label>
+                                    <select th:id="'brandSelect' + ${vehicle.id}" name="brand" class="form-select brand-select" required>
+                                        <option value="" selected>Marka Seçin</option>
+                                        <option th:value="${vehicle.brand}" th:text="${vehicle.brand}" th:selected="${vehicle.brand != null}"></option>
+                                    </select>
+                                    <div class="invalid-feedback">Marka gereklidir</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="modelSelect" class="form-label">Model</label>
+                                    <select th:id="'modelSelect' + ${vehicle.id}" name="model" class="form-select" required>
+                                        <option value="" selected>Model Seçin</option>
+                                        <option th:value="${vehicle.model}" th:text="${vehicle.model}" th:selected="${vehicle.model != null}"></option>
+                                    </select>
+                                    <div class="invalid-feedback">Model gereklidir</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <label for="ownerName" class="form-label">Araç Sahibi</label>
+                                    <input type="text" class="form-control" id="ownerName" name="ownerName" th:value="${vehicle.ownerName}" required>
+                                    <div class="invalid-feedback">Araç sahibi adı gereklidir</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="ownerPhone" class="form-label">Telefon</label>
+                                    <input type="tel" class="form-control phone-mask" id="ownerPhone" name="ownerPhone" th:value="${vehicle.ownerPhone}" required 
+                                           placeholder="(5XX) XXX XX XX">
+                                    <div class="invalid-feedback">Telefon numarası gereklidir</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col d-flex justify-content-end">
+                                    <button type="button" class="btn btn-danger me-2" data-bs-dismiss="modal">İptal</button>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="bi bi-pencil-square me-2"></i>Güncelle
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                // Initialize all tooltips
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl)
+        <script>
+            // Sayfa yüklendiğinde çalışacak
+            document.addEventListener('DOMContentLoaded', function() {
+                loadVehicleBrands();
+                initializePhoneMasks();
+            });
+            
+            // Araç markaları yükleyen fonksiyon
+            function loadVehicleBrands() {
+                // Tüm marka select elementlerini seç
+                document.querySelectorAll('.brand-select').forEach(function(select) {
+                    // Mevcut markanın değerini sakla
+                    const currentBrand = select.options.length > 1 ? select.options[1].value : '';
+                    
+                    // API'den markaları yükle
+                    fetch('/api/vehicles/makes')
+                        .then(response => response.json())
+                        .then(brands => {
+                            // İlk boş seçeneği sakla
+                            const firstOption = select.options[0];
+                            
+                            // Mevcut seçeneği sakla (eğer varsa)
+                            let currentOption = null;
+                            if (select.options.length > 1) {
+                                currentOption = select.options[1];
+                            }
+                            
+                            // Select'i temizle ama ilk seçeneği koru
+                            select.innerHTML = '';
+                            select.appendChild(firstOption);
+                            
+                            // Eğer mevcut bir marka varsa, onu ekle
+                            if (currentOption && currentBrand) {
+                                select.appendChild(currentOption);
+                            }
+                            
+                            // Markaları alfabetik olarak sırala
+                            brands.sort();
+                            
+                            // Tüm markaları ekle (mevcut marka hariç)
+                            brands.forEach(brand => {
+                                // Eğer mevcut marka ile aynı değilse ekle
+                                if (brand !== currentBrand) {
+                                    const option = document.createElement('option');
+                                    option.value = brand;
+                                    option.textContent = brand;
+                                    select.appendChild(option);
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Markalar yüklenirken hata oluştu:', error);
+                        });
+                });
+            }
+            
+            // Telefon maskesi oluşturan fonksiyon
+            function initializePhoneMasks() {
+                document.querySelectorAll('.phone-mask').forEach(function(input) {
+                    input.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, ''); // Sadece rakamları al
+                        
+                        if (value.length > 10) {
+                            value = value.substring(0, 10); // Maksimum 10 rakam
+                        }
+                        
+                        let formattedValue = '';
+                        
+                        if (value.length > 0) {
+                            // Format: (5XX) XXX XX XX
+                            formattedValue = '(';
+                            
+                            if (value.length > 0) {
+                                formattedValue += value.substring(0, Math.min(3, value.length));
+                            }
+                            
+                            if (value.length >= 3) {
+                                formattedValue += ') ';
+                            }
+                            
+                            if (value.length > 3) {
+                                formattedValue += value.substring(3, Math.min(6, value.length));
+                            }
+                            
+                            if (value.length >= 6) {
+                                formattedValue += ' ';
+                            }
+                            
+                            if (value.length > 6) {
+                                formattedValue += value.substring(6, Math.min(8, value.length));
+                            }
+                            
+                            if (value.length >= 8) {
+                                formattedValue += ' ';
+                            }
+                            
+                            if (value.length > 8) {
+                                formattedValue += value.substring(8, 10);
+                            }
+                        }
+                        
+                        e.target.value = formattedValue;
+                    });
+                    
+                    // İlk yükleme için mevcut değerleri formatla
+                    let event = new Event('input', { bubbles: true });
+                    input.dispatchEvent(event);
+                });
+                
+                // Modal açıldığında telefonları formatla
+                document.querySelectorAll('.modal').forEach(function(modal) {
+                    modal.addEventListener('shown.bs.modal', function() {
+                        modal.querySelectorAll('.phone-mask').forEach(function(input) {
+                            let event = new Event('input', { bubbles: true });
+                            input.dispatchEvent(event);
+                        });
+                    });
+                });
+            }
+            
+            // AJAX ile araç güncelleme
+            function updateVehicle(event, form) {
+                event.preventDefault();
+                
+                // Form validation
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    return;
+                }
+                
+                const vehicleId = form.querySelector('input[name="id"]').value;
+                const saveButton = document.getElementById('saveButton' + vehicleId);
+                const successAlert = document.getElementById('successAlert' + vehicleId);
+                const errorAlert = document.getElementById('errorAlert' + vehicleId);
+                const errorMessage = errorAlert.querySelector('.error-message');
+                
+                // Formdaki verileri topla
+                const formData = new FormData(form);
+                const vehicle = {};
+                formData.forEach((value, key) => {
+                    vehicle[key] = value;
+                });
+                
+                // Butonu devre dışı bırak ve yükleniyor göster
+                saveButton.disabled = true;
+                saveButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Kaydediliyor...';
+                
+                // Alertleri gizle
+                successAlert.classList.add('d-none');
+                errorAlert.classList.add('d-none');
+                
+                // CSRF headerları güvenli bir şekilde hazırla
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                // CSRF token meta etiketlerini güvenli şekilde kontrol et 
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+                const csrfToken = document.querySelector('meta[name="_csrf"]');
+                
+                if (csrfHeader && csrfToken) {
+                    headers[csrfHeader.getAttribute('content')] = csrfToken.getAttribute('content');
+                }
+                
+                // AJAX isteği gönder
+                fetch(`/vehicles/${vehicleId}/update`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(vehicle)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            throw new Error('Araç bulunamadı');
+                        } else if (response.status === 403) {
+                            throw new Error('Bu işlemi yapmaya yetkiniz yok');
+                        } else {
+                            return response.text().then(text => { 
+                                throw new Error(text || 'Güncelleme başarısız oldu'); 
+                            });
+                        }
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Başarılı mesajını göster
+                    successAlert.classList.remove('d-none');
+                    
+                    // 1.5 saniye sonra sayfayı yenile
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                })
+                .catch(error => {
+                    // Hata mesajını göster
+                    errorMessage.textContent = error.message || 'Bir hata oluştu';
+                    errorAlert.classList.remove('d-none');
+                    
+                    // Hata durumunda konsolda detayları göster
+                    console.error('Güncelleme hatası:', error);
+                })
+                .finally(() => {
+                    // Butonu normal haline getir
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = '<i class="bi bi-save me-2"></i>Kaydet';
                 });
             }
         </script>
+
+        <style>
+            .vehicle-row:hover {
+                background-color: rgba(0, 123, 255, 0.05);
+                transition: background-color 0.2s ease;
+            }
+            
+            .vehicle-row {
+                transition: all 0.2s ease;
+            }
+            
+            .btn {
+                opacity: 0.9;
+                transition: all 0.2s ease;
+            }
+            
+            .btn:hover {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            
+            .btn-warning {
+                box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+            }
+            
+            .btn-warning:hover {
+                box-shadow: 0 4px 8px rgba(255, 193, 7, 0.4);
+            }
+        </style>
 
         <!-- Hata Modal'ı -->
         <div class="modal fade" id="errorModal">

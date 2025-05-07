@@ -58,7 +58,7 @@
                                     <label class="form-label">
                                         <i class="bi bi-person me-1"></i>Kontrol Eden
                                     </label>
-                                    <input type="text" class="form-control" th:field="*{inspector}" required />
+                                    <input type="text" class="form-control" name="inspector" required />
                                 </div>
 
                                 <div class="form-group mb-3">
@@ -293,7 +293,10 @@
 
             // Get initial data
             try {
-                damagePoints = JSON.parse([[${inspection.damageData}]] || '[]');
+                /*<![CDATA[*/
+                var damageDataStr = /*[[${inspection.damageData}]]*/ '[]';
+                damagePoints = JSON.parse(damageDataStr || '[]');
+                /*]]>*/
             } catch (e) {
                 damagePoints = [];
             }
@@ -404,9 +407,11 @@
             updateDamagePoints();
 
             // Set initial ratings
-            var exteriorCondition = [[${inspection.exteriorCondition}]] || 0;
-            var interiorCondition = [[${inspection.interiorCondition}]] || 0;
-            var mechanicalCondition = [[${inspection.mechanicalCondition}]] || 0;
+            /*<![CDATA[*/
+            var exteriorCondition = /*[[${inspection.exteriorCondition}]]*/ 0;
+            var interiorCondition = /*[[${inspection.interiorCondition}]]*/ 0;
+            var mechanicalCondition = /*[[${inspection.mechanicalCondition}]]*/ 0;
+            /*]]>*/
 
             if (exteriorCondition > 0) {
                 $('#exteriorConditionInput').val(exteriorCondition);

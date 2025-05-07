@@ -44,4 +44,6 @@ public class Vehicle {
 
     @OneToMany(mappedBy = "vehicle")
     private List<FaultDiagnosis> faultDiagnoses;
+    
+    
 } 

@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:replace="${title}">Otomobil Servis Takip Sistemi</title>
+    <link rel="icon" type="image/x-icon" href="/images/servispilot_logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="/css/custom.css?v=1.2" rel="stylesheet">
+    <!-- Spring Security CSRF Token -->
+    <meta name="_csrf" th:content="${_csrf?.token}" />
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -222,7 +230,7 @@
         <div class="container">
             <a class="navbar-brand animate__animated animate__fadeIn" href="/vehicles">
                 <span class="d-inline-block" style="vertical-align: middle;">
-                    <img src="/images/servispilot_logo.png" alt="Servis Pilot Logo" 
+                    <img src="/images/logo-transparent.png" alt="Servis Pilot Logo" 
                          class="animate__animated animate__fadeIn"
                          style="height: 92px; margin-right: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
                 </span>
@@ -254,26 +262,10 @@
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="/diagnoses/new">
-                                    <i class="bi bi-tools me-2"></i>Arıza Teşhisi
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/maintenance/new">
-                                    <i class="bi bi-wrench me-2"></i>Bakım Kaydı
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/inspections/new">
-                                    <i class="bi bi-clipboard-check me-2"></i>Ekspertiz
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/reminders/new">
-                                    <i class="bi bi-bell me-2"></i>Hatırlatıcı
-                                </a>
-                            </li>
+                            
+                            
+                            
+                            
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -326,33 +318,7 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-clock-history me-1"></i>Geçmiş
-                        </a>
-                        <ul class="dropdown-menu animate__animated animate__fadeIn">
-                            <li>
-                                <a class="dropdown-item" href="/maintenance">
-                                    <i class="bi bi-wrench me-2"></i>Bakım Geçmişi
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/diagnoses">
-                                    <i class="bi bi-tools me-2"></i>Arıza Teşhisleri
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/inspections">
-                                    <i class="bi bi-clipboard-check me-2"></i>Ekspertiz Raporları
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/reminders">
-                                    <i class="bi bi-bell me-2"></i>Hatırlatıcılar
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                    
                 </ul>
                 <form class="search-form d-flex animate__animated animate__fadeIn" action="/vehicles/search" method="get">
                     <i class="bi bi-search"></i>
@@ -405,7 +371,7 @@
                             <i class="bi bi-info-circle me-2"></i>Aktif hatırlatıcı bulunmamaktadır
                         </li>
                         <li th:each="reminder : ${activeReminders}" class="dropdown-item">
-                            <a th:href="@{'/vehicles/' + ${reminder.vehicle.id}}" class="text-decoration-none text-dark">
+                            <a th:href="@{/reminders}" class="text-decoration-none text-dark">
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
                                     <div>
@@ -444,8 +410,11 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/tr.js"></script>
 
     <script>
         // Confirm Delete
@@ -481,6 +450,67 @@
                 title: message
             });
         };
+        
+        // Bildirim Sesi ve Animasyonu
+        document.addEventListener('DOMContentLoaded', function() {
+            // Bildirim sayısını kontrol et
+            const notificationBadge = document.querySelector('.notification-dropdown .badge');
+            if (notificationBadge) {
+                const notificationCount = parseInt(notificationBadge.textContent.trim(), 10);
+                if (notificationCount > 0) {
+                    // Bildirim ikonunu animetle
+                    const notificationIcon = document.querySelector('.notification-dropdown .bi-bell-fill');
+                    if (notificationIcon) {
+                        notificationIcon.classList.add('animate__animated', 'animate__heartBeat');
+                        // Animasyonu tekrarla
+                        setInterval(() => {
+                            notificationIcon.classList.remove('animate__heartBeat');
+                            setTimeout(() => {
+                                notificationIcon.classList.add('animate__heartBeat');
+                            }, 100);
+                        }, 3000);
+                    }
+                    
+                    // Bildirim Sesi ve Popup
+                    const notificationSound = new Audio('/sounds/notification.mp3');
+                    
+                    // Sadece sayfayı yüklerken bir kez çal
+                    if (!sessionStorage.getItem('notificationSoundPlayed')) {
+                        // Tarayıcı kısıtlamaları nedeniyle sayfaya girişten kısa bir süre sonra bildirim göster
+                        setTimeout(() => {
+                            // SweetAlert2 ile bildirim göster
+                            Swal.fire({
+                                title: 'Yaklaşan Hatırlatıcılar!',
+                                html: `<div class="text-center">
+                                    <i class="bi bi-bell-fill text-warning fs-1 mb-3"></i>
+                                    <p>${notificationCount} adet yaklaşan servis hatırlatıcınız bulunmaktadır.</p>
+                                    <small class="text-muted">Detayları görmek için zil ikonuna tıklayabilirsiniz.</small>
+                                </div>`,
+                                icon: 'warning',
+                                showCancelButton: false,
+                                confirmButtonText: 'Tamam',
+                                confirmButtonColor: '#f39c12',
+                                allowOutsideClick: true,
+                                allowEscapeKey: true
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Kullanıcı etkileşimi gerçekleşti, ses çalabilir
+                                    notificationSound.play().catch(e => console.log('Ses çalınamadı:', e));
+                                }
+                            });
+
+                            // Sayfada sadece bir kez gösterilmesi için session storage'a kaydet
+                            sessionStorage.setItem('notificationSoundPlayed', 'true');
+                        }, 1000); // 1 saniye gecikme ile göster
+                    }
+                }
+            }
+        });
     </script>
+
+    <!-- Custom JavaScript -->
+    <script src="/js/auth-interceptor.js"></script>
+
+    
 </body>
 </html> 

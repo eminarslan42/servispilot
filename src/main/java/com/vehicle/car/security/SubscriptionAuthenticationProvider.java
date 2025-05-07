@@ -18,19 +18,13 @@ import com.vehicle.car.service.SubscriptionService;
 public class SubscriptionAuthenticationProvider extends DaoAuthenticationProvider {
     
     private final SubscriptionService subscriptionService;
-    private final UserDetailsServiceImpl userDetailsService;
-    private final PasswordEncoder passwordEncoder;
     
-    // Constructor injection to break circular dependency
     public SubscriptionAuthenticationProvider(
             SubscriptionService subscriptionService,
             UserDetailsServiceImpl userDetailsService,
             PasswordEncoder passwordEncoder) {
         this.subscriptionService = subscriptionService;
-        this.userDetailsService = userDetailsService;
-        this.passwordEncoder = passwordEncoder;
         
-        // Initialize in constructor instead of PostConstruct
         setUserDetailsService(userDetailsService);
         setPasswordEncoder(passwordEncoder);
     }

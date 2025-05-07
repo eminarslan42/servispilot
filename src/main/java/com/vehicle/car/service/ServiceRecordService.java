@@ -27,6 +27,17 @@ public class ServiceRecordService {
         return serviceRecordRepository.findByVehicleId(vehicleId);
     }
 
+    public List<ServiceRecord> getLatestServiceRecordsByVehicleId(Long vehicleId) {
+        List<ServiceRecord> records = serviceRecordRepository.findByVehicleId(vehicleId);
+        // Servis kayıtlarını en yeni tarihe göre sırala (null tarihleri en sona koy)
+        records.sort((a, b) -> {
+            if (a.getServiceDate() == null) return 1;
+            if (b.getServiceDate() == null) return -1;
+            return b.getServiceDate().compareTo(a.getServiceDate());
+        });
+        return records;
+    }
+
     public List<ServiceRecord> getServiceRecordsByPlate(String plate) {
         return serviceRecordRepository.findByVehiclePlate(plate);
     }
@@ -48,5 +59,13 @@ public class ServiceRecordService {
 
     public void deleteServiceRecord(Long id) {
         serviceRecordRepository.deleteById(id);
+    }
+
+    public Optional<ServiceRecord> getLastServiceRecordByVehicleId(Long vehicleId) {
+        List<ServiceRecord> records = getLatestServiceRecordsByVehicleId(vehicleId);
+        if (records.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(records.get(0));
     }
 } 

@@ -2,8 +2,10 @@ package com.vehicle.car.controller;
 
 import com.vehicle.car.model.FaultDiagnosis;
 import com.vehicle.car.model.Vehicle;
+import com.vehicle.car.model.User;
 import com.vehicle.car.service.FaultDiagnosisService;
 import com.vehicle.car.service.VehicleService;
+import com.vehicle.car.service.UserService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.LineSeparator;
@@ -14,10 +16,17 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,13 +34,42 @@ import java.time.format.DateTimeFormatter;
 public class FaultDiagnosisController {
     private final FaultDiagnosisService faultDiagnosisService;
     private final VehicleService vehicleService;
+    private final UserService userService;
+
+    // Mevcut kullanıcıyı al
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            return userService.findByUsername(userDetails.getUsername());
+        }
+        return null;
+    }
 
     @GetMapping("/vehicle/{vehicleId}")
     public String listVehicleDiagnoses(@PathVariable Long vehicleId, Model model) {
+        User currentUser = getCurrentUser();
+        
         vehicleService.getVehicleById(vehicleId).ifPresent(vehicle -> {
             model.addAttribute("vehicle", vehicle);
-            model.addAttribute("diagnoses", faultDiagnosisService.getDiagnosesByVehicleId(vehicleId));
+            
+            // Kullanıcının rolünü kontrol et
+            if (currentUser != null && "ROLE_ADMIN".equals(currentUser.getRole().toString())) {
+                // Admin kullanıcı ise tüm kayıtları göster
+                model.addAttribute("diagnoses", faultDiagnosisService.getDiagnosesByVehicleId(vehicleId));
+            } else if (currentUser != null) {
+                // Normal kullanıcı ise sadece kendi kayıtlarını göster
+                List<FaultDiagnosis> allDiagnoses = faultDiagnosisService.getDiagnosesByVehicleId(vehicleId);
+                List<FaultDiagnosis> userDiagnoses = allDiagnoses.stream()
+                    .filter(d -> d.getUser() != null && d.getUser().getId().equals(currentUser.getId()))
+                    .collect(Collectors.toList());
+                model.addAttribute("diagnoses", userDiagnoses);
+            } else {
+                // Giriş yapmamış kullanıcılara boş liste göster
+                model.addAttribute("diagnoses", List.of());
+            }
         });
+        
         return "diagnosis/list";
     }
 
@@ -44,6 +82,13 @@ public class FaultDiagnosisController {
         diagnosis.setVehicle(vehicle);
         diagnosis.setCurrentKilometer(vehicle.getCurrentKilometer());
         diagnosis.setStatus("Yeni");
+        
+        // Mevcut kullanıcı bilgisini doldur
+        User currentUser = getCurrentUser();
+        if (currentUser != null) {
+            diagnosis.setDiagnosedBy(currentUser.getUsername());
+            diagnosis.setUser(currentUser);
+        }
 
         model.addAttribute("diagnosis", diagnosis);
         model.addAttribute("vehicle", vehicle);
@@ -60,6 +105,16 @@ public class FaultDiagnosisController {
             diagnosis.setStatus("Yeni");
             diagnosis.setDiagnosisDate(LocalDateTime.now());
             
+            // Mevcut kullanıcıyı teşhis ile ilişkilendir
+            User currentUser = getCurrentUser();
+            if (currentUser != null) {
+                diagnosis.setUser(currentUser);
+                // Eğer diagnosedBy alanı boşsa, mevcut kullanıcının adını ata
+                if (diagnosis.getDiagnosedBy() == null || diagnosis.getDiagnosedBy().isEmpty()) {
+                    diagnosis.setDiagnosedBy(currentUser.getUsername());
+                }
+            }
+            
             faultDiagnosisService.saveDiagnosis(diagnosis);
             
             return "redirect:/vehicles/" + vehicleId;
@@ -71,15 +126,35 @@ public class FaultDiagnosisController {
 
     @GetMapping("/{id}")
     public String viewDiagnosis(@PathVariable Long id, Model model) {
-        faultDiagnosisService.getDiagnosisById(id).ifPresent(diagnosis -> 
-            model.addAttribute("diagnosis", diagnosis)
-        );
+        User currentUser = getCurrentUser();
+        
+        faultDiagnosisService.getDiagnosisById(id).ifPresent(diagnosis -> {
+            // Kullanıcı admin değilse ve bu kayıt kullanıcıya ait değilse erişimi engelle
+            if (currentUser != null && 
+                !currentUser.getRole().toString().equals("ROLE_ADMIN") && 
+                !diagnosis.getUser().getId().equals(currentUser.getId())) {
+                model.addAttribute("error", "Bu teşhis kaydını görüntüleme yetkiniz yok.");
+                return;
+            }
+            
+            model.addAttribute("diagnosis", diagnosis);
+        });
+        
         return "diagnosis/view";
     }
 
     @PostMapping("/{id}/update-status")
     public String updateStatus(@PathVariable Long id, @RequestParam String status) {
+        User currentUser = getCurrentUser();
+        
         faultDiagnosisService.getDiagnosisById(id).ifPresent(diagnosis -> {
+            // Kullanıcı admin değilse ve bu kayıt kullanıcıya ait değilse erişimi engelle
+            if (currentUser != null && 
+                !currentUser.getRole().toString().equals("ROLE_ADMIN") && 
+                !diagnosis.getUser().getId().equals(currentUser.getId())) {
+                return;
+            }
+            
             diagnosis.setStatus(status);
             
             // İptal durumunda standart ücret ayarla
@@ -89,20 +164,48 @@ public class FaultDiagnosisController {
             
             faultDiagnosisService.saveDiagnosis(diagnosis);
         });
+        
         return "redirect:/diagnoses/" + id;
     }
 
     @GetMapping
     public String listAllDiagnoses(Model model) {
-        model.addAttribute("diagnoses", faultDiagnosisService.getAllDiagnoses());
+        User currentUser = getCurrentUser();
+        
+        if (currentUser != null) {
+            if (currentUser.getRole().toString().equals("ROLE_ADMIN")) {
+                // Admin kullanıcılar tüm teşhisleri görebilir
+                model.addAttribute("diagnoses", faultDiagnosisService.getAllDiagnoses());
+            } else {
+                // Normal kullanıcılar sadece kendi eklediği teşhisleri görebilir
+                List<FaultDiagnosis> allDiagnoses = faultDiagnosisService.getAllDiagnoses();
+                List<FaultDiagnosis> userDiagnoses = allDiagnoses.stream()
+                    .filter(d -> d.getUser() != null && d.getUser().getId().equals(currentUser.getId()))
+                    .collect(Collectors.toList());
+                model.addAttribute("diagnoses", userDiagnoses);
+            }
+        } else {
+            // Giriş yapmamış kullanıcılara boş liste göster
+            model.addAttribute("diagnoses", List.of());
+        }
+        
         model.addAttribute("vehicles", vehicleService.getAllVehicles());
         return "diagnosis/all";
     }
 
     @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> generateDiagnosisPdf(@PathVariable Long id) {
+        User currentUser = getCurrentUser();
+        
         return faultDiagnosisService.getDiagnosisById(id)
                 .<ResponseEntity<byte[]>>map(diagnosis -> {
+                    // Kullanıcı admin değilse ve bu kayıt kullanıcıya ait değilse erişimi engelle
+                    if (currentUser != null && 
+                        !currentUser.getRole().toString().equals("ROLE_ADMIN") && 
+                        !diagnosis.getUser().getId().equals(currentUser.getId())) {
+                        return ResponseEntity.status(403).build(); // Forbidden
+                    }
+                    
                     try {
                         // Set up document with margins (top margin reduced from 90 to 50)
                         Document document = new Document(PageSize.A4, 36, 36, 50, 36);
@@ -342,5 +445,33 @@ public class FaultDiagnosisController {
                     pageNum,
                     document.right(), textBase, 0);
         }
+    }
+
+    @GetMapping("/{id}/delete")
+    public String deleteDiagnosis(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        // Get the diagnosis to check ownership
+        Optional<FaultDiagnosis> diagnosisOpt = faultDiagnosisService.getDiagnosisById(id);
+        if (diagnosisOpt.isPresent()) {
+            FaultDiagnosis diagnosis = diagnosisOpt.get();
+            
+            // Check if user is admin or the owner of the diagnosis
+            if ("ROLE_ADMIN".equals(currentUser.getRole().toString()) || 
+                diagnosis.getUser().getId().equals(currentUser.getId())) {
+                faultDiagnosisService.deleteDiagnosis(id);
+                redirectAttributes.addFlashAttribute("success", "Arıza teşhisi başarıyla silindi.");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Bu arıza teşhisini silme yetkiniz bulunmuyor.");
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Arıza teşhisi bulunamadı.");
+        }
+        
+        // Redirect back to the vehicle details page
+        return "redirect:/vehicles/" + diagnosisOpt.map(d -> d.getVehicle().getId()).orElse(0L);
     }
 } 

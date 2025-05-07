@@ -105,6 +105,29 @@
         .form-floating {
             margin-bottom: 1rem;
         }
+        .info-message {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            border-left: 5px solid #0d6efd;
+            margin-bottom: 20px;
+        }
+        .info-icon {
+            font-size: 3rem;
+            color: #0d6efd;
+            margin-bottom: 15px;
+        }
+        .info-text {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .contact-email {
+            font-weight: 600;
+            color: #0d6efd;
+        }
     </style>
 </head>
 <body>
@@ -112,56 +135,68 @@
         <div class="register-container">
             <div class="register-header">
                 <h2>Hesap Oluştur</h2>
-                <p>Servis Pilot'a hoş geldiniz! Lütfen bilgilerinizi girin.</p>
+                <p>Servis Pilot'a hoş geldiniz!</p>
             </div>
             
-            <div class="error-message" id="errorMessage"></div>
-            
-            <form id="registerForm">
-                <div class="form-floating mb-3">
-                    <input type="text" class="form-control" id="username" name="username" placeholder="Kullanıcı Adı" required minlength="3" maxlength="20">
-                    <label for="username">Kullanıcı Adı</label>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <input type="email" class="form-control" id="email" name="email" placeholder="E-posta" required maxlength="50">
-                    <label for="email">E-posta</label>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Şifre" required minlength="6" maxlength="40">
-                        <span class="input-group-text" style="cursor: pointer;" onclick="togglePassword()">
-                            <i class="bi bi-eye-slash" id="toggleIcon"></i>
-                        </span>
-                    </div>
-                    <label for="password">Şifre</label>
-                    <div class="password-requirements">
-                        <i class="bi bi-info-circle"></i> En az 6 karakter uzunluğunda olmalıdır
-                    </div>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <select class="form-select" id="role" name="role" required>
-                        <option value="ROLE_USER">Kullanıcı</option>
-                        <option value="ROLE_ADMIN">Yönetici</option>
-                    </select>
-                    <label for="role">Rol</label>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-register">
-                    <i class="bi bi-person-plus me-2"></i>Kayıt Ol
-                </button>
-
+            <!-- Normal kullanıcılar için bilgilendirme mesajı -->
+            <div class="info-message" th:if="${!isAdmin}">
+                <i class="bi bi-info-circle-fill info-icon"></i>
+                <p class="info-text">Ücretsiz 1 aylık deneme için lütfen <span class="contact-email">servispilot@hotmail.com</span> ile iletişime geçiniz</p>
                 <div class="login-link">
                     Zaten hesabınız var mı? <a href="/login">Giriş Yapın</a>
                 </div>
-            </form>
+            </div>
+            
+            <!-- Admin kullanıcılar için kayıt formu -->
+            <div th:if="${isAdmin}">
+                <div class="error-message" id="errorMessage"></div>
+                
+                <form id="registerForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Kullanıcı Adı" required minlength="3" maxlength="20">
+                        <label for="username">Kullanıcı Adı</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="E-posta" required maxlength="50">
+                        <label for="email">E-posta</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Şifre" required minlength="6" maxlength="40">
+                            <span class="input-group-text" style="cursor: pointer;" onclick="togglePassword()">
+                                <i class="bi bi-eye-slash" id="toggleIcon"></i>
+                            </span>
+                        </div>
+                        <label for="password">Şifre</label>
+                        <div class="password-requirements">
+                            <i class="bi bi-info-circle"></i> En az 6 karakter uzunluğunda olmalıdır
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="ROLE_USER">Kullanıcı</option>
+                            <option value="ROLE_ADMIN">Yönetici</option>
+                        </select>
+                        <label for="role">Rol</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-register">
+                        <i class="bi bi-person-plus me-2"></i>Kayıt Ol
+                    </button>
+
+                    <div class="login-link">
+                        Zaten hesabınız var mı? <a href="/login">Giriş Yapın</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
+    <script th:if="${isAdmin}">
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const toggleIcon = document.getElementById('toggleIcon');

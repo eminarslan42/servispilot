@@ -26,7 +26,7 @@
             <div class="card shadow mb-4">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table" id="subscriptionsTable">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Kullanıcı Adı</th>
@@ -39,7 +39,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="subscription : ${subscriptions}">
+                                <tr th:each="subscription : ${subscriptions}" class="align-middle animate__animated animate__fadeIn">
                                     <td>
                                         <span th:text="${subscription.user.username}"></span>
                                         <small class="text-muted d-block" th:text="${'ID: ' + subscription.user.id}"></small>
@@ -55,22 +55,42 @@
                                               class="badge bg-danger">Pasif</span>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            <form th:if="${subscription.isActive}" 
-                                                  th:action="@{/api/subscriptions/{id}/extend(id=${subscription.user.id})}" 
-                                                  method="post" 
-                                                  style="display: inline;">
-                                                <button type="submit" 
-                                                        class="btn btn-sm btn-primary"
-                                                        onclick="return confirm('Bu kullanıcının aboneliğini uzatmak istediğinizden emin misiniz?')">
+                                        <div class="d-flex gap-2">
+                                            <div th:if="${subscription.isActive}" class="dropup">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-primary dropdown-toggle"
+                                                        data-bs-toggle="dropdown" 
+                                                        aria-expanded="false">
                                                     <i class="bi bi-arrow-clockwise"></i> Uzat
                                                 </button>
-                                            </form>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <form th:action="@{/api/subscriptions/{id}/extend(id=${subscription.user.id})}" method="post">
+                                                            <button type="submit" name="duration" value="1" class="dropdown-item">
+                                                                1 Ay Uzat
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form th:action="@{/api/subscriptions/{id}/extend(id=${subscription.user.id})}" method="post">
+                                                            <button type="submit" name="duration" value="6" class="dropdown-item">
+                                                                6 Ay Uzat
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form th:action="@{/api/subscriptions/{id}/extend(id=${subscription.user.id})}" method="post">
+                                                            <button type="submit" name="duration" value="12" class="dropdown-item">
+                                                                1 Yıl Uzat
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                             
                                             <form th:if="${subscription.isActive}" 
                                                   th:action="@{/api/subscriptions/{id}/cancel(id=${subscription.user.id})}" 
-                                                  method="post" 
-                                                  style="display: inline;">
+                                                  method="post">
                                                 <button type="submit" 
                                                         class="btn btn-sm btn-danger"
                                                         onclick="return confirm('Bu kullanıcının aboneliğini iptal etmek istediğinizden emin misiniz?')">
@@ -78,16 +98,45 @@
                                                 </button>
                                             </form>
                                             
-                                            <form th:unless="${subscription.isActive}" 
-                                                  th:action="@{/api/subscriptions/{id}/renew(id=${subscription.user.id})}" 
-                                                  method="post" 
-                                                  style="display: inline;">
-                                                <button type="submit" 
-                                                        class="btn btn-sm btn-success"
-                                                        onclick="return confirm('Bu kullanıcının aboneliğini yenilemek istediğinizden emin misiniz?')">
+                                            <div th:unless="${subscription.isActive}" class="dropup">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-success dropdown-toggle"
+                                                        data-bs-toggle="dropdown" 
+                                                        aria-expanded="false">
                                                     <i class="bi bi-arrow-repeat"></i> Yenile
                                                 </button>
-                                            </form>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <form th:action="@{/api/subscriptions/{id}/renew(id=${subscription.user.id})}" method="post">
+                                                            <button type="submit" name="duration" value="1" class="dropdown-item">
+                                                                1 Ay Yenile
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form th:action="@{/api/subscriptions/{id}/renew(id=${subscription.user.id})}" method="post">
+                                                            <button type="submit" name="duration" value="6" class="dropdown-item">
+                                                                6 Ay Yenile
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form th:action="@{/api/subscriptions/{id}/renew(id=${subscription.user.id})}" method="post">
+                                                            <button type="submit" name="duration" value="12" class="dropdown-item">
+                                                                1 Yıl Yenile
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(subscriptions)}">
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-people display-1"></i>
+                                            <p class="mt-3">Henüz abonelik kaydı bulunmuyor.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -97,17 +146,6 @@
                 </div>
             </div>
         </div>
-
-        <script>
-            $(document).ready(function() {
-                $('#subscriptionsTable').DataTable({
-                    language: {
-                        url: '/js/datatables-tr.json'
-                    },
-                    order: [[2, 'desc']]
-                });
-            });
-        </script>
     </section>
 </body>
 </html> 
